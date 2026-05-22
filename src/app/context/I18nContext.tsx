@@ -74,7 +74,7 @@ const translations: Record<Language, Record<string, string>> = {
     incorrect: "Airooto",
     passed: "Wole",
     failed: "Padanu",
-    xpEarned:XP Samun",
+    xpEarned: "XP Samun",
     streak: "Ojo",
     totalXP: "Gbogbo XP",
     badges: "Badges",
