@@ -1,0 +1,307 @@
+SmartDrive Naija — Figma AI UI Design Prompt
+
+Design a modern, mobile-first Android application called SmartDrive Naija, an AI-powered multilingual driving education platform aligned with Nigeria’s FRSC driving curriculum.
+
+The app should feel like a combination of:
+
+Duolingo (gamification & progress)
+Google Maps (clarity and navigation simplicity)
+Coursera/Udemy (learning structure)
+Calm (clean UI and accessibility)
+Design Goals
+Friendly and trustworthy
+Highly accessible for low-literacy users
+Clean Nigerian/African-inspired visual identity
+Offline-first UX
+Gamified learning experience
+Optimized for mid-range Android devices
+Minimal cognitive overload
+Modern fintech-level polish
+Brand Direction
+Theme
+
+Modern African digital learning platform with safety-focused visuals.
+
+Primary Colors
+Emerald Green (#00A86B)
+Deep Navy (#0B1F33)
+Warm Yellow Accent (#FFC857)
+White backgrounds with soft gray cards
+Typography
+Headings: Poppins Bold
+Body: Inter or Nunito Sans
+Large readable text
+High contrast accessibility
+UI Style
+Rounded cards
+Soft shadows
+Clean spacing
+Icon-driven navigation
+Friendly illustrations
+Smooth gradients
+Large touch targets
+Minimal clutter
+Generate These Screens
+1. Splash Screen
+SmartDrive Naija logo
+Tagline:
+“Learn Smart. Drive Safe.”
+Animated loading indicator
+Nigerian-inspired subtle background pattern
+2. Onboarding Screens (3–5 slides)
+Screen 1
+
+Illustration of Nigerian roads and learner drivers
+
+Text:
+“Master Nigerian driving rules with interactive lessons.”
+
+Screen 2
+
+Illustration of multilingual learning
+
+Text:
+“Learn in English, Hausa, Yoruba, Igbo and Pidgin.”
+
+Screen 3
+
+Illustration of quizzes and certificates
+
+Text:
+“Practice mock tests and earn certificates.”
+
+Screen 4
+
+Offline mode illustration
+
+Text:
+“Study anywhere — even without internet.”
+
+Add:
+
+Skip button
+Next button
+Progress dots
+3. Authentication Screens
+Login
+Phone number input
+OTP button
+Country selector defaulted to Nigeria
+Friendly minimal design
+OTP Verification
+6-digit OTP input
+Countdown timer
+Resend OTP
+4. Language Selection Screen
+
+Show large selectable language cards:
+
+English
+Hausa
+Yoruba
+Igbo
+Pidgin
+
+Each card should include:
+
+Language name
+Region indicator
+Small cultural icon/illustration
+5. Home Dashboard
+
+Design a gamified dashboard.
+
+Include:
+
+Welcome message
+Daily streak counter
+XP points
+Progress circle
+“Continue Learning” button
+Current module card
+Recent achievements
+Mock test quick access
+Bottom navigation bar
+
+Sections:
+
+Modules
+Mock Test
+Leaderboard
+Certificates
+Profile
+
+Use modern dashboard cards similar to Duolingo and modern fintech apps.
+
+6. Module Listing Screen
+
+Display all 8 learning modules as interactive cards.
+
+Modules:
+
+Road Signs & Markings
+Highway Code
+Defensive Driving
+Vehicle Roadworthiness
+Traffic Offences & Penalties
+First Aid & Accident Response
+Drunk, Drugged & Distracted Driving
+Mock Theory Test
+
+Each card should show:
+
+Progress %
+Lock/unlock status
+XP reward
+Estimated completion time
+Icon or illustration
+
+Premium modules should show subtle premium badges.
+
+7. Lesson Detail Screen
+
+Include:
+
+Lesson title
+Audio narration controls
+Download for offline toggle
+Illustration/image
+Text lesson content
+Progress tracker
+“Take Quiz” button
+
+UI should feel lightweight and readable.
+
+8. Quiz Interface
+
+Design an engaging quiz UI.
+
+Include:
+
+Question progress tracker
+Timer
+Multiple-choice answers
+Large touch-friendly buttons
+Correct/wrong feedback animation
+XP reward popup
+Sound/micro interactions
+
+Style similar to Duolingo quiz flow.
+
+9. Mock Theory Test Screen
+
+Professional exam simulation UI.
+
+Include:
+
+Timer
+Question counter
+Flag question option
+Progress bar
+Submit button
+Calm exam-focused layout
+10. Results & Weakness Analysis
+
+Show:
+
+Final score
+Pass/fail status
+Topic performance chart
+Weak areas heatmap
+Recommended next modules
+Share certificate button
+
+Use clean data visualization.
+
+11. Certificate Screen
+
+Display:
+
+Digital completion certificate
+User name
+Completion date
+QR verification
+Share to WhatsApp button
+Download PDF button
+
+Premium elegant appearance.
+
+12. Profile & Settings
+
+Include:
+
+User avatar
+XP level
+Completed modules
+Preferred language
+Offline downloads
+Dark mode toggle
+Accessibility settings
+Notification preferences
+13. Leaderboard Screen
+
+Gamified national leaderboard.
+
+Include:
+
+Top users
+User ranking
+XP points
+Streaks
+Weekly/monthly tabs
+
+Add friendly competition visuals.
+
+14. Hazard Reporting Screen (Future Feature)
+
+Google Maps-inspired UI.
+
+Include:
+
+Map view
+Hazard pins
+Report hazard button
+Pin categories:
+Pothole
+Flooding
+Broken traffic light
+Police checkpoint
+Accident spot
+UX Requirements
+Accessibility
+Large readable fonts
+Audio-first experience
+High contrast mode
+Low literacy support
+Minimal text overload
+Offline UX
+Download indicators
+Sync status badges
+Offline banners
+Lightweight UI
+Gamification
+XP animations
+Achievement badges
+Streak celebrations
+Reward feedback
+Mobile Design Specifications
+Android-first design
+Use 360px mobile frame
+Design system with reusable components
+Create light mode first
+Optional dark mode variants
+Consistent spacing system
+Material Design inspired interactions
+Deliverables
+
+Generate:
+
+Full mobile UI kit
+Design system
+Component library
+Icons
+Mobile app screens
+Interactive prototype flow
+Clean developer handoff structure
+
+Style should be modern, premium, scalable, and investor-ready.
