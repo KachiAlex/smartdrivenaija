@@ -40,8 +40,13 @@ export function QuizScreen({ onNavigate, moduleId }: QuizScreenProps) {
 
   if (questions.length === 0) {
     return (
-      <div className="size-full flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <div className="size-full flex items-center justify-center bg-[#FAFBFF] relative overflow-hidden">
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          className="absolute inset-0 rounded-full bg-[#6366F1]/10 blur-[100px]"
+        />
+        <Loader2 className="w-10 h-10 text-[#6366F1] animate-spin relative z-10" />
       </div>
     );
   }
@@ -97,43 +102,59 @@ export function QuizScreen({ onNavigate, moduleId }: QuizScreenProps) {
     const xpEarned = result?.xpEarned || 0;
 
     return (
-      <div className="size-full flex flex-col items-center justify-center bg-background p-6">
+      <div className="size-full flex flex-col items-center justify-center bg-[#FAFBFF] p-6 relative overflow-hidden">
+        {/* Cosmic mesh blobs */}
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#6366F1]/20 blur-[80px]"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/15 blur-[70px]"
+        />
+
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className={`p-8 rounded-full mb-6 ${passed ? "bg-primary/10" : "bg-muted"}`}
+          className={`p-8 rounded-full mb-6 relative z-10 glow-pulse ${passed ? "bg-gradient-to-br from-[#6366F1]/20 to-[#8B5CF6]/10" : "bg-[#E2E8F0]/50"}`}
         >
-          <Trophy className={`w-20 h-20 ${passed ? "text-primary" : "text-muted-foreground"}`} />
+          <Trophy className={`w-20 h-20 ${passed ? "text-[#6366F1]" : "text-[#64748B]"}`} />
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-center mb-8"
+          className="text-center mb-8 relative z-10"
         >
-          <h2 className="mb-2" style={{ fontSize: "2rem" }}>
+          <h2 className="mb-2 text-[#0F172A]" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "Poppins" }}>
             {passed ? "Great Job!" : "Keep Practicing"}
           </h2>
-          <p className="text-muted-foreground text-lg mb-4">
+          <p className="text-[#64748B] text-lg mb-4">
             You scored {score} out of {questions.length}
           </p>
-          <div className="text-6xl font-heading mb-2" style={{ fontWeight: 800, color: passed ? "var(--primary)" : "var(--muted-foreground)" }}>
+          <div className="text-6xl mb-2" style={{ fontWeight: 800, fontFamily: "Poppins", color: passed ? "#6366F1" : "#64748B" }}>
             {percentage}%
           </div>
           {xpEarned > 0 && (
-            <div className="flex items-center justify-center gap-2 text-accent-foreground">
+            <div className="flex items-center justify-center gap-2 text-[#F59E0B]">
               <Trophy className="w-5 h-5" />
-              <span className="font-heading" style={{ fontWeight: 600 }}>+{xpEarned} XP Earned</span>
+              <span style={{ fontWeight: 600, fontFamily: "Poppins" }}>+{xpEarned} XP Earned</span>
             </div>
           )}
         </motion.div>
 
-        <div className="w-full max-w-md space-y-3">
-          <Button onClick={() => onNavigate("home")} className="w-full h-12" size="lg">
-            Back to Home
-          </Button>
+        <div className="w-full max-w-md space-y-3 relative z-10">
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button onClick={() => onNavigate("home")} className="w-full h-12 shadow-lg shadow-[#6366F1]/20" size="lg"
+              style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+            >
+              Back to Home
+            </Button>
+          </motion.div>
         </div>
       </div>
     );
@@ -143,29 +164,52 @@ export function QuizScreen({ onNavigate, moduleId }: QuizScreenProps) {
   const isCorrect = selectedAnswer === question.correctAnswer;
 
   return (
-    <div className="size-full flex flex-col bg-background">
-      <div className="p-6 border-b">
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-heading" style={{ fontWeight: 600 }}>
-            Question {currentQuestion + 1}/{questions.length}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            Score: {score}/{questions.length}
-          </span>
+    <div className="size-full flex flex-col bg-[#FAFBFF] relative overflow-hidden">
+      {/* Cosmic mesh blobs */}
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], x: [0, 20, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[-10%] right-[-15%] w-72 h-72 rounded-full bg-[#6366F1]/15 blur-[90px]"
+      />
+      <motion.div
+        animate={{ scale: [1, 1.15, 1], x: [0, -15, 0] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-[20%] left-[-10%] w-60 h-60 rounded-full bg-[#8B5CF6]/10 blur-[80px]"
+      />
+
+      {/* Glass header */}
+      <div className="p-6 relative z-10">
+        <div className="glass-card p-4 rounded-2xl">
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>
+              Question {currentQuestion + 1}/{questions.length}
+            </span>
+            <span className="text-sm text-[#64748B]">
+              Score: {score}/{questions.length}
+            </span>
+          </div>
+          <div className="h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="h-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-full"
+            />
+          </div>
         </div>
-        <Progress value={((currentQuestion + 1) / questions.length) * 100} className="h-2" />
       </div>
 
-      <div className="flex-1 flex flex-col p-6">
+      <div className="flex-1 flex flex-col p-6 relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion}
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -100 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="flex-1 flex flex-col"
           >
-            <h3 className="mb-8" style={{ fontSize: "1.25rem" }}>
+            <h3 className="mb-8 text-[#0F172A]" style={{ fontSize: "1.25rem", fontWeight: 600, fontFamily: "Poppins" }}>
               {question.question}
             </h3>
 
@@ -179,33 +223,33 @@ export function QuizScreen({ onNavigate, moduleId }: QuizScreenProps) {
                 return (
                   <motion.div
                     key={index}
-                    whileHover={!showFeedback ? { scale: 1.02 } : {}}
+                    whileHover={!showFeedback ? { scale: 1.02, y: -2 } : {}}
                     whileTap={!showFeedback ? { scale: 0.98 } : {}}
                   >
                     <Card
-                      className={`p-4 cursor-pointer transition-all ${
+                      className={`p-4 cursor-pointer transition-all border-2 ${
                         showAsCorrect
-                          ? "border-primary bg-primary/10"
+                          ? "border-[#6366F1] bg-[#6366F1]/10 shadow-lg shadow-[#6366F1]/20"
                           : showAsWrong
-                          ? "border-destructive bg-destructive/10"
+                          ? "border-red-400 bg-red-50"
                           : isSelected
-                          ? "border-primary"
-                          : "hover:border-primary/50"
+                          ? "border-[#6366F1] bg-[#6366F1]/5"
+                          : "border-[#E2E8F0] bg-white hover:border-[#6366F1]/30 hover:shadow-md"
                       }`}
                       onClick={() => handleAnswer(index)}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center font-heading ${
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                             showAsCorrect
-                              ? "bg-primary text-white"
+                              ? "bg-[#6366F1] text-white"
                               : showAsWrong
-                              ? "bg-destructive text-white"
+                              ? "bg-red-400 text-white"
                               : isSelected
-                              ? "bg-primary text-white"
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-[#6366F1] text-white"
+                              : "bg-[#E2E8F0] text-[#64748B]"
                           }`}
-                          style={{ fontWeight: 600 }}
+                          style={{ fontWeight: 600, fontFamily: "Poppins" }}
                         >
                           {showFeedback && (showAsCorrect || showAsWrong) ? (
                             showAsCorrect ? <Check className="w-5 h-5" /> : <X className="w-5 h-5" />
@@ -213,7 +257,7 @@ export function QuizScreen({ onNavigate, moduleId }: QuizScreenProps) {
                             String.fromCharCode(65 + index)
                           )}
                         </div>
-                        <span>{option}</span>
+                        <span className="text-[#0F172A]">{option}</span>
                       </div>
                     </Card>
                   </motion.div>
@@ -229,14 +273,14 @@ export function QuizScreen({ onNavigate, moduleId }: QuizScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             className="mt-6"
           >
-            <Card className={`p-4 ${isCorrect ? "bg-primary/10 border-primary/20" : "bg-destructive/10 border-destructive/20"}`}>
+            <Card className={`p-4 glass-card border-2 ${isCorrect ? "border-[#6366F1]/30" : "border-red-400/30"}`}>
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${isCorrect ? "bg-primary/20" : "bg-destructive/20"}`}>
-                  {isCorrect ? <Check className="w-6 h-6 text-primary" /> : <X className="w-6 h-6 text-destructive" />}
+                <div className={`p-2 rounded-lg ${isCorrect ? "bg-[#6366F1]/20" : "bg-red-100"}`}>
+                  {isCorrect ? <Check className="w-6 h-6 text-[#6366F1]" /> : <X className="w-6 h-6 text-red-400" />}
                 </div>
                 <div className="flex-1">
-                  <h4 className="mb-1">{isCorrect ? "Correct!" : "Not quite"}</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="mb-1 text-[#0F172A] font-semibold">{isCorrect ? "Correct!" : "Not quite"}</h4>
+                  <p className="text-sm text-[#64748B]">
                     {isCorrect
                       ? "Well done! You got it right."
                       : `The correct answer is: ${question.options[question.correctAnswer!]}`}
@@ -245,15 +289,19 @@ export function QuizScreen({ onNavigate, moduleId }: QuizScreenProps) {
               </div>
             </Card>
 
-            <Button onClick={nextQuestion} className="w-full h-12 mt-4" size="lg" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Submitting...</>
-              ) : currentQuestion < questions.length - 1 ? (
-                <>Next Question <ArrowRight className="w-5 h-5 ml-2" /></>
-              ) : (
-                "See Results"
-              )}
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button onClick={nextQuestion} className="w-full h-12 mt-4 shadow-lg shadow-[#6366F1]/20" size="lg" disabled={isSubmitting}
+                style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+              >
+                {isSubmitting ? (
+                  <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Submitting...</>
+                ) : currentQuestion < questions.length - 1 ? (
+                  <>Next Question <ArrowRight className="w-5 h-5 ml-2" /></>
+                ) : (
+                  "See Results"
+                )}
+              </Button>
+            </motion.div>
           </motion.div>
         )}
       </div>

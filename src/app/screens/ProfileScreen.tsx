@@ -38,20 +38,35 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
   const completedLessons = modules.reduce((sum, m) => sum + m.lessonsCompleted, 0);
   const recentQuizzes = progress?.recentQuizzes?.length || 0;
   return (
-    <div className="size-full overflow-auto bg-background pb-24">
-      <div className="bg-gradient-to-br from-primary to-secondary text-white p-6 pb-12">
+    <div className="size-full overflow-auto bg-[#FAFBFF] pb-28">
+      {/* Cosmic header with mesh gradient */}
+      <div className="relative p-6 pb-12 rounded-b-[2.5rem] overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" }}
+      >
+        {/* Animated mesh blobs */}
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/30 blur-[70px]"
+        />
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 mb-6"
+          className="flex items-center gap-4 mb-6 relative z-10"
         >
-          <Avatar className="w-20 h-20 border-4 border-white/20">
-            <AvatarFallback className="bg-white/20 text-white text-2xl font-heading" style={{ fontWeight: 700 }}>
+          <Avatar className="w-20 h-20 border-4 border-white/20 glow-pulse">
+            <AvatarFallback className="bg-white/20 text-white text-2xl" style={{ fontWeight: 700, fontFamily: "Poppins" }}>
               {(user?.fullName || user?.phone || 'U').slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h2 className="text-white mb-1" style={{ fontSize: "1.5rem" }}>
+            <h2 className="text-white mb-1" style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "Poppins" }}>
               {user?.fullName || 'Learner'}
             </h2>
             <p className="text-white/80">{user?.phone}</p>
@@ -62,33 +77,33 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-3 gap-3"
+          className="grid grid-cols-3 gap-3 relative z-10"
         >
-          <Card className="p-4 bg-white/10 backdrop-blur-sm border-white/20 text-center">
+          <Card className="p-4 glass-card border-white/20 text-center">
             <div className="flex justify-center mb-2">
-              <Zap className="w-5 h-5 text-accent" />
+              <Zap className="w-5 h-5 text-[#F59E0B]" />
             </div>
-            <p className="text-2xl font-heading text-white mb-1" style={{ fontWeight: 700 }}>
+            <p className="text-2xl text-white mb-1" style={{ fontWeight: 700, fontFamily: "Poppins" }}>
               {xpTotal.toLocaleString()}
             </p>
             <p className="text-xs text-white/70">Total XP</p>
           </Card>
 
-          <Card className="p-4 bg-white/10 backdrop-blur-sm border-white/20 text-center">
+          <Card className="p-4 glass-card border-white/20 text-center">
             <div className="flex justify-center mb-2">
-              <Trophy className="w-5 h-5 text-accent" />
+              <Trophy className="w-5 h-5 text-[#F59E0B]" />
             </div>
-            <p className="text-2xl font-heading text-white mb-1" style={{ fontWeight: 700 }}>
+            <p className="text-2xl text-white mb-1" style={{ fontWeight: 700, fontFamily: "Poppins" }}>
               {badges.length}
             </p>
             <p className="text-xs text-white/70">Badges</p>
           </Card>
 
-          <Card className="p-4 bg-white/10 backdrop-blur-sm border-white/20 text-center">
+          <Card className="p-4 glass-card border-white/20 text-center">
             <div className="flex justify-center mb-2">
               <div className="text-orange-400 text-xl">🔥</div>
             </div>
-            <p className="text-2xl font-heading text-white mb-1" style={{ fontWeight: 700 }}>
+            <p className="text-2xl text-white mb-1" style={{ fontWeight: 700, fontFamily: "Poppins" }}>
               {streakCurrent}
             </p>
             <p className="text-xs text-white/70">Day Streak</p>
@@ -96,25 +111,25 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
         </motion.div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 -mt-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h3 className="mb-4">Learning Progress</h3>
-          <Card className="p-4 space-y-4">
+          <h3 className="mb-4 text-[#0F172A] font-bold">Learning Progress</h3>
+          <Card className="p-4 space-y-4 glass-card border-[#6366F1]/10">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Completed Modules</span>
-              <Badge variant="secondary">{completedModules}/{modules.length}</Badge>
+              <span className="text-sm text-[#64748B]">Completed Modules</span>
+              <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{completedModules}/{modules.length}</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Lessons Finished</span>
-              <Badge variant="secondary">{completedLessons}/{totalLessons}</Badge>
+              <span className="text-sm text-[#64748B]">Lessons Finished</span>
+              <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{completedLessons}/{totalLessons}</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Quizzes Passed</span>
-              <Badge variant="secondary">{recentQuizzes}</Badge>
+              <span className="text-sm text-[#64748B]">Quizzes Passed</span>
+              <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{recentQuizzes}</Badge>
             </div>
           </Card>
         </motion.div>
@@ -124,44 +139,44 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h3 className="mb-4">Settings</h3>
-          <Card className="divide-y">
+          <h3 className="mb-4 text-[#0F172A] font-bold">Settings</h3>
+          <Card className="divide-y glass-card border-[#6366F1]/10">
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Globe className="w-5 h-5 text-muted-foreground" />
+                <Globe className="w-5 h-5 text-[#64748B]" />
                 <div>
-                  <p className="font-heading" style={{ fontWeight: 600 }}>Language</p>
-                  <p className="text-sm text-muted-foreground">{user?.preferredLanguage || 'en'}</p>
+                  <p className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>Language</p>
+                  <p className="text-sm text-[#64748B]">{user?.preferredLanguage || 'en'}</p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRight className="w-5 h-5 text-[#64748B]" />
             </div>
 
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-muted-foreground" />
-                <Label htmlFor="notifications" className="cursor-pointer">Notifications</Label>
+                <Bell className="w-5 h-5 text-[#64748B]" />
+                <Label htmlFor="notifications" className="cursor-pointer text-[#0F172A]">Notifications</Label>
               </div>
               <Switch id="notifications" defaultChecked />
             </div>
 
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Moon className="w-5 h-5 text-muted-foreground" />
-                <Label htmlFor="dark-mode" className="cursor-pointer">Dark Mode</Label>
+                <Moon className="w-5 h-5 text-[#64748B]" />
+                <Label htmlFor="dark-mode" className="cursor-pointer text-[#0F172A]">Dark Mode</Label>
               </div>
               <Switch id="dark-mode" checked={theme === "dark"} onCheckedChange={toggleTheme} />
             </div>
 
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Download className="w-5 h-5 text-muted-foreground" />
+                <Download className="w-5 h-5 text-[#64748B]" />
                 <div>
-                  <p className="font-heading" style={{ fontWeight: 600 }}>Offline Content</p>
-                  <p className="text-sm text-muted-foreground">3 modules downloaded</p>
+                  <p className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>Offline Content</p>
+                  <p className="text-sm text-[#64748B]">3 modules downloaded</p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRight className="w-5 h-5 text-[#64748B]" />
             </div>
           </Card>
         </motion.div>
@@ -171,10 +186,12 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Button variant="outline" className="w-full h-12 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
-            <LogOut className="w-5 h-5 mr-2" />
-            Logout
-          </Button>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button variant="outline" className="w-full h-12 text-red-400 border-red-400/30 hover:bg-red-50 hover:text-red-500" onClick={handleLogout}>
+              <LogOut className="w-5 h-5 mr-2" />
+              Logout
+            </Button>
+          </motion.div>
         </motion.div>
       </div>
     </div>

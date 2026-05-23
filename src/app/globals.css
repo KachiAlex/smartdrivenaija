@@ -89,3 +89,176 @@ body,
   overflow-x: hidden;
   position: relative;
 }
+
+/* ===== COSMIC DRIVE ANIMATIONS ===== */
+
+/* Mesh gradient background */
+@keyframes mesh-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.1); }
+  50% { transform: translate(-20px, 30px) scale(0.95); }
+  75% { transform: translate(20px, 20px) scale(1.05); }
+}
+
+@keyframes mesh-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-30px, 20px) scale(0.95); }
+  50% { transform: translate(20px, -30px) scale(1.05); }
+  75% { transform: translate(-20px, -20px) scale(1.1); }
+}
+
+@keyframes mesh-float-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, 10px) scale(1.08); }
+  66% { transform: translate(-30px, -20px) scale(0.92); }
+}
+
+.cosmic-mesh-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.cosmic-mesh-bg::before,
+.cosmic-mesh-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cosmic-mesh-bg::before {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #818CF8 0%, transparent 70%);
+  top: -100px;
+  left: -100px;
+  animation: mesh-float 12s ease-in-out infinite;
+}
+
+.cosmic-mesh-bg::after {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, #F59E0B 0%, transparent 70%);
+  bottom: -80px;
+  right: -80px;
+  animation: mesh-float-2 15s ease-in-out infinite;
+}
+
+/* Floating particles */
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
+  50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+}
+
+@keyframes drift-x {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(15px); }
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float-particle 6s ease-in-out infinite;
+}
+
+.particle-delay-1 { animation-delay: -1s; }
+.particle-delay-2 { animation-delay: -2.5s; }
+.particle-delay-3 { animation-delay: -4s; }
+.particle-delay-4 { animation-delay: -5.5s; }
+
+/* Glow pulse */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), 0 0 40px rgba(99, 102, 241, 0.1); }
+  50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.5), 0 0 60px rgba(99, 102, 241, 0.2); }
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Text glow */
+@keyframes text-glow {
+  0%, 100% { text-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+  50% { text-shadow: 0 0 25px rgba(99, 102, 241, 0.6), 0 0 50px rgba(139, 92, 246, 0.3); }
+}
+
+.text-glow {
+  animation: text-glow 3s ease-in-out infinite;
+}
+
+/* Orbit ring */
+@keyframes orbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.orbit-ring {
+  animation: orbit 8s linear infinite;
+}
+
+/* Counter animation helper */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-reveal {
+  animation: count-up 0.5s ease-out forwards;
+}
+
+/* Glass card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Liquid morph indicator */
+@keyframes liquid-blob {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+}
+
+/* Stagger entrance */
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.stagger-children > * {
+  opacity: 0;
+  animation: stagger-in 0.5s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+
+/* Warp text reveal */
+@keyframes warp-reveal {
+  0% { opacity: 0; filter: blur(10px); transform: scale(1.1) translateY(10px); }
+  100% { opacity: 1; filter: blur(0); transform: scale(1) translateY(0); }
+}
+
+.warp-reveal {
+  animation: warp-reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Perspective tilt hover */
+.perspective-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.perspective-card:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateZ(10px);
+  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+}

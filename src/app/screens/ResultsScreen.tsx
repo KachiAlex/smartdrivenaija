@@ -34,15 +34,30 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
     : [];
 
   return (
-    <div className="size-full overflow-auto bg-background pb-24">
-      <div className={`bg-gradient-to-br ${passed ? "from-primary to-secondary" : "from-muted to-muted/50"} text-white p-6 pb-12`}>
+    <div className="size-full overflow-auto bg-[#FAFBFF] pb-28">
+      {/* Cosmic header with mesh gradient */}
+      <div className="relative p-6 pb-12 rounded-b-[2.5rem] overflow-hidden"
+        style={{ background: passed ? "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" : "linear-gradient(135deg, #64748B 0%, #94A3B8 100%)" }}
+      >
+        {/* Animated mesh blobs */}
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/30 blur-[70px]"
+        />
+
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="flex justify-center mb-6"
+          className="flex justify-center mb-6 relative z-10"
         >
-          <div className={`p-8 rounded-full ${passed ? "bg-white/20" : "bg-white/10"}`}>
+          <div className={`p-8 rounded-full glow-pulse ${passed ? "bg-white/20" : "bg-white/10"}`}>
             <Trophy className="w-16 h-16 text-white" />
           </div>
         </motion.div>
@@ -51,57 +66,60 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-center"
+          className="text-center relative z-10"
         >
-          <h1 className="text-white mb-2" style={{ fontSize: "2rem" }}>
+          <h1 className="text-white mb-2" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "Poppins" }}>
             {passed ? "Congratulations!" : "Keep Practicing"}
           </h1>
           <p className="text-white/80 text-lg mb-4">
             {passed ? "You passed the mock test!" : "You didn't pass this time"}
           </p>
-          <div className="text-7xl font-heading mb-2" style={{ fontWeight: 800 }}>
+          <motion.div
+            className="shimmer-text text-7xl mb-2"
+            style={{ fontWeight: 800, fontFamily: "Poppins" }}
+          >
             {totalScore}%
-          </div>
+          </motion.div>
           <Badge className={passed ? "bg-white/20 text-white border-white/30" : "bg-white/10 text-white/70 border-white/20"}>
             {passed ? "PASSED" : "FAILED"} • Pass mark: 70%
           </Badge>
         </motion.div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 -mt-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h3 className="mb-4">Quick Stats</h3>
+          <h3 className="mb-4 text-[#0F172A] font-bold">Quick Stats</h3>
           <div className="grid grid-cols-2 gap-3">
-            <Card className="p-4">
+            <Card className="p-4 glass-card border-[#6366F1]/10">
               <div className="flex items-center gap-3 mb-2">
-                <CheckCircle className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Correct</span>
+                <CheckCircle className="w-5 h-5 text-[#6366F1]" />
+                <span className="text-sm text-[#64748B]">Correct</span>
               </div>
-              <p className="font-heading" style={{ fontWeight: 700, fontSize: "1.5rem" }}>
+              <p className="text-[#0F172A]" style={{ fontWeight: 700, fontSize: "1.5rem", fontFamily: "Poppins" }}>
                 {score}/{totalQuestions}
               </p>
             </Card>
 
-            <Card className="p-4">
+            <Card className="p-4 glass-card border-red-400/10">
               <div className="flex items-center gap-3 mb-2">
-                <AlertCircle className="w-5 h-5 text-destructive" />
-                <span className="text-sm text-muted-foreground">Wrong</span>
+                <AlertCircle className="w-5 h-5 text-red-400" />
+                <span className="text-sm text-[#64748B]">Wrong</span>
               </div>
-              <p className="font-heading" style={{ fontWeight: 700, fontSize: "1.5rem" }}>
+              <p className="text-[#0F172A]" style={{ fontWeight: 700, fontSize: "1.5rem", fontFamily: "Poppins" }}>
                 {wrong}/{totalQuestions}
               </p>
             </Card>
           </div>
 
           {xpEarned > 0 && (
-            <Card className="p-4 mt-3 bg-accent/10 border-accent/20">
+            <Card className="p-4 mt-3 glass-card border-[#F59E0B]/10">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">XP Earned</span>
-                <span className="font-heading" style={{ fontWeight: 700, fontSize: "1.5rem" }}>+{xpEarned}</span>
+                <span className="text-sm text-[#64748B]">XP Earned</span>
+                <span className="text-[#F59E0B]" style={{ fontWeight: 700, fontSize: "1.5rem", fontFamily: "Poppins" }}>+{xpEarned}</span>
               </div>
             </Card>
           )}
@@ -113,15 +131,15 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h3 className="mb-4">Topic Performance</h3>
-            <Card className="p-6">
+            <h3 className="mb-4 text-[#0F172A] font-bold">Topic Performance</h3>
+            <Card className="p-6 glass-card border-[#6366F1]/10">
               <ChartContainer config={{}} className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={topicPerformance}>
                     <XAxis dataKey="topic" />
                     <YAxis />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="score" fill="var(--primary)" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="score" fill="#6366F1" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -135,15 +153,22 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <h3 className="mb-4">Weak Areas</h3>
-            <Card className="p-4 space-y-4">
+            <h3 className="mb-4 text-[#0F172A] font-bold">Weak Areas</h3>
+            <Card className="p-4 space-y-4 glass-card border-[#6366F1]/10">
               {weakAreas.map((area: any, i: number) => (
                 <div key={i}>
                   <div className="flex items-center justify-between mb-2">
-                    <span>{area.topic.replace(/_/g, ' ')}</span>
-                    <span className="text-sm text-muted-foreground">{area.percentage}%</span>
+                    <span className="text-[#0F172A]">{area.topic.replace(/_/g, ' ')}</span>
+                    <span className="text-sm text-[#64748B]">{area.percentage}%</span>
                   </div>
-                  <Progress value={area.percentage} className="h-2" />
+                  <div className="h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${area.percentage}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-full"
+                    />
+                  </div>
                 </div>
               ))}
             </Card>
@@ -155,18 +180,18 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <h3 className="mb-4">Recommended Next Steps</h3>
-          <Card className="p-4 bg-accent/10 border-accent/20">
+          <h3 className="mb-4 text-[#0F172A] font-bold">Recommended Next Steps</h3>
+          <Card className="p-4 glass-card border-[#F59E0B]/10">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-accent/20">
-                <TrendingUp className="w-6 h-6 text-accent-foreground" />
+              <div className="p-2 rounded-lg bg-[#F59E0B]/20">
+                <TrendingUp className="w-6 h-6 text-[#D97706]" />
               </div>
               <div className="flex-1">
-                <h4 className="mb-1">Review Safety Module</h4>
-                <p className="text-sm text-muted-foreground mb-3">
+                <h4 className="mb-1 text-[#0F172A] font-semibold">Review Safety Module</h4>
+                <p className="text-sm text-[#64748B] mb-3">
                   Focus on First Aid & Accident Response to improve your score
                 </p>
-                <Button variant="outline" size="sm" onClick={() => onNavigate("modules")}>
+                <Button variant="outline" size="sm" onClick={() => onNavigate("modules")} className="border-[#6366F1]/30 text-[#6366F1]">
                   Go to Module
                 </Button>
               </div>
@@ -181,16 +206,20 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
           className="space-y-3 pt-4"
         >
           {passed && (
-            <Button onClick={() => onNavigate("certificate")} className="w-full h-12" size="lg">
-              View Certificate
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button onClick={() => onNavigate("certificate")} className="w-full h-12 shadow-lg shadow-[#6366F1]/20" size="lg"
+                style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+              >
+                View Certificate
+              </Button>
+            </motion.div>
           )}
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" className="h-12">
+            <Button variant="outline" className="h-12 border-[#6366F1]/30 text-[#6366F1]">
               <Share2 className="w-5 h-5 mr-2" />
               Share
             </Button>
-            <Button onClick={() => onNavigate("home")} variant="outline" className="h-12">
+            <Button onClick={() => onNavigate("home")} variant="outline" className="h-12 border-[#6366F1]/30 text-[#6366F1]">
               Home
             </Button>
           </div>
