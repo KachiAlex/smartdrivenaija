@@ -1,13 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const authRoutes = require('../server/src/routes/auth');
-const userRoutes = require('../server/src/routes/user');
-const modulesRoutes = require('../server/src/routes/modules');
-const progressRoutes = require('../server/src/routes/progress');
-const quizRoutes = require('../server/src/routes/quiz');
-const mockTestRoutes = require('../server/src/routes/mockTest');
-const leaderboardRoutes = require('../server/src/routes/leaderboard');
-const errorHandler = require('../server/src/middleware/errorHandler');
+import express from 'express';
+import cors from 'cors';
+import authRoutes from '../server/src/routes/auth.js';
+import userRoutes from '../server/src/routes/user.js';
+import modulesRoutes from '../server/src/routes/modules.js';
+import progressRoutes from '../server/src/routes/progress.js';
+import quizRoutes from '../server/src/routes/quiz.js';
+import mockTestRoutes from '../server/src/routes/mockTest.js';
+import leaderboardRoutes from '../server/src/routes/leaderboard.js';
+import errorHandler from '../server/src/middleware/errorHandler.js';
 
 const app = express();
 
@@ -27,6 +27,6 @@ app.use('/leaderboard', leaderboardRoutes);
 app.use(errorHandler);
 
 // Export for Vercel serverless function
-module.exports = (req, res) => {
+export default (req, res) => {
   app(req, res);
 };
