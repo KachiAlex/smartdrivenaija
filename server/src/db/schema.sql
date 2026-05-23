@@ -11,22 +11,22 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ============================================================
 -- ENUMS
 -- ============================================================
-CREATE TYPE user_role AS ENUM ('learner', 'instructor', 'school_admin', 'frsc_admin');
-CREATE TYPE language_code AS ENUM ('en', 'ha', 'yo', 'ig', 'pi');
-CREATE TYPE module_status AS ENUM ('locked', 'available', 'in_progress', 'completed');
-CREATE TYPE question_type AS ENUM ('multiple_choice', 'true_false', 'scenario');
-CREATE TYPE badge_type AS ENUM (
+DO $$ BEGIN CREATE TYPE user_role AS ENUM ('learner', 'instructor', 'school_admin', 'frsc_admin'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE language_code AS ENUM ('en', 'ha', 'yo', 'ig', 'pi'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE module_status AS ENUM ('locked', 'available', 'in_progress', 'completed'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE question_type AS ENUM ('multiple_choice', 'true_false', 'scenario'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE badge_type AS ENUM (
   'road_ready', 'roundabout_master', 'night_owl', 'frsc_ready',
   'streak_7', 'streak_30', 'streak_90', 'first_quiz', 'first_mock',
   'perfect_score', 'speed_demon'
-);
-CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed', 'refunded');
-CREATE TYPE hazard_type AS ENUM ('pothole', 'broken_light', 'flooding', 'accident_spot', 'checkpoint');
+); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed', 'refunded'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE hazard_type AS ENUM ('pothole', 'broken_light', 'flooding', 'accident_spot', 'checkpoint'); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- ============================================================
 -- USERS & AUTH
 -- ============================================================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   phone VARCHAR(20) UNIQUE,
   email VARCHAR(255) UNIQUE,
@@ -44,7 +44,7 @@ CREATE TABLE users (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE otp_codes (
+CREATE TABLE IF NOT EXISTS otp_codes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   phone VARCHAR(20) NOT NULL,
   code VARCHAR(6) NOT NULL,
@@ -54,10 +54,10 @@ CREATE TABLE otp_codes (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_otp_phone ON otp_codes(phone);
-CREATE INDEX idx_otp_expires ON otp_codes(expires_at);
+CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_codes(phone);
+CREATE INDEX IF NOT EXISTS idx_otp_expires ON otp_codes(expires_at);
 
-CREATE TABLE refresh_tokens (
+CREATE TABLE IF NOT EXISTS refresh_tokens (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   token TEXT UNIQUE NOT NULL,
@@ -66,12 +66,12 @@ CREATE TABLE refresh_tokens (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_refresh_user ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_user ON refresh_tokens(user_id);
 
 -- ============================================================
 -- MODULES & CONTENT
 -- ============================================================
-CREATE TABLE modules (
+CREATE TABLE IF NOT EXISTS modules (
   id SERIAL PRIMARY KEY,
   slug VARCHAR(50) UNIQUE NOT NULL,
   title_en VARCHAR(200) NOT NULL,
@@ -93,7 +93,7 @@ CREATE TABLE modules (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE lessons (
+CREATE TABLE IF NOT EXISTS lessons (
   id SERIAL PRIMARY KEY,
   module_id INTEGER REFERENCES modules(id) ON DELETE CASCADE,
   slug VARCHAR(100) NOT NULL,
@@ -118,12 +118,12 @@ CREATE TABLE lessons (
   UNIQUE(module_id, slug)
 );
 
-CREATE INDEX idx_lessons_module ON lessons(module_id);
+CREATE INDEX IF NOT EXISTS idx_lessons_module ON lessons(module_id);
 
 -- ============================================================
 -- QUESTIONS & QUIZZES
 -- ============================================================
-CREATE TABLE questions (
+CREATE TABLE IF NOT EXISTS questions (
   id SERIAL PRIMARY KEY,
   module_id INTEGER REFERENCES modules(id) ON DELETE CASCADE,
   lesson_id INTEGER REFERENCES lessons(id) ON DELETE SET NULL,
@@ -150,14 +150,14 @@ CREATE TABLE questions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_questions_module ON questions(module_id);
-CREATE INDEX idx_questions_topic ON questions(topic_tag);
-CREATE INDEX idx_questions_mock ON questions(is_mock_test_eligible) WHERE is_mock_test_eligible = true;
+CREATE INDEX IF NOT EXISTS idx_questions_module ON questions(module_id);
+CREATE INDEX IF NOT EXISTS idx_questions_topic ON questions(topic_tag);
+CREATE INDEX IF NOT EXISTS idx_questions_mock ON questions(is_mock_test_eligible) WHERE is_mock_test_eligible = true;
 
 -- ============================================================
 -- QUIZ ATTEMPTS (per-lesson quizzes)
 -- ============================================================
-CREATE TABLE quiz_attempts (
+CREATE TABLE IF NOT EXISTS quiz_attempts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   module_id INTEGER REFERENCES modules(id),
@@ -172,13 +172,13 @@ CREATE TABLE quiz_attempts (
   completed_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_quiz_user ON quiz_attempts(user_id);
-CREATE INDEX idx_quiz_module ON quiz_attempts(module_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_user ON quiz_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_module ON quiz_attempts(module_id);
 
 -- ============================================================
 -- MOCK TEST ATTEMPTS
 -- ============================================================
-CREATE TABLE mock_tests (
+CREATE TABLE IF NOT EXISTS mock_tests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   questions JSONB NOT NULL,        -- ordered list of question IDs
@@ -194,12 +194,12 @@ CREATE TABLE mock_tests (
   completed_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_mock_user ON mock_tests(user_id);
+CREATE INDEX IF NOT EXISTS idx_mock_user ON mock_tests(user_id);
 
 -- ============================================================
 -- USER PROGRESS
 -- ============================================================
-CREATE TABLE user_module_progress (
+CREATE TABLE IF NOT EXISTS user_module_progress (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   module_id INTEGER REFERENCES modules(id) ON DELETE CASCADE,
@@ -213,9 +213,9 @@ CREATE TABLE user_module_progress (
   UNIQUE(user_id, module_id)
 );
 
-CREATE INDEX idx_progress_user ON user_module_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_progress_user ON user_module_progress(user_id);
 
-CREATE TABLE user_lesson_progress (
+CREATE TABLE IF NOT EXISTS user_lesson_progress (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   lesson_id INTEGER REFERENCES lessons(id) ON DELETE CASCADE,
@@ -226,12 +226,12 @@ CREATE TABLE user_lesson_progress (
   UNIQUE(user_id, lesson_id)
 );
 
-CREATE INDEX idx_lesson_progress_user ON user_lesson_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_lesson_progress_user ON user_lesson_progress(user_id);
 
 -- ============================================================
 -- XP LEDGER (audit trail for all XP changes)
 -- ============================================================
-CREATE TABLE xp_ledger (
+CREATE TABLE IF NOT EXISTS xp_ledger (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   amount INTEGER NOT NULL,
@@ -241,13 +241,13 @@ CREATE TABLE xp_ledger (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_xp_user ON xp_ledger(user_id);
-CREATE INDEX idx_xp_created ON xp_ledger(created_at);
+CREATE INDEX IF NOT EXISTS idx_xp_user ON xp_ledger(user_id);
+CREATE INDEX IF NOT EXISTS idx_xp_created ON xp_ledger(created_at);
 
 -- ============================================================
 -- STREAKS
 -- ============================================================
-CREATE TABLE streak_history (
+CREATE TABLE IF NOT EXISTS streak_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   activity_date DATE NOT NULL,
@@ -258,12 +258,12 @@ CREATE TABLE streak_history (
   UNIQUE(user_id, activity_date)
 );
 
-CREATE INDEX idx_streak_user_date ON streak_history(user_id, activity_date DESC);
+CREATE INDEX IF NOT EXISTS idx_streak_user_date ON streak_history(user_id, activity_date DESC);
 
 -- ============================================================
 -- BADGES / ACHIEVEMENTS
 -- ============================================================
-CREATE TABLE badges (
+CREATE TABLE IF NOT EXISTS badges (
   id SERIAL PRIMARY KEY,
   slug badge_type UNIQUE NOT NULL,
   title_en VARCHAR(100) NOT NULL,
@@ -273,7 +273,7 @@ CREATE TABLE badges (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE user_badges (
+CREATE TABLE IF NOT EXISTS user_badges (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   badge_id INTEGER REFERENCES badges(id) ON DELETE CASCADE,
@@ -281,12 +281,12 @@ CREATE TABLE user_badges (
   UNIQUE(user_id, badge_id)
 );
 
-CREATE INDEX idx_user_badges ON user_badges(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_badges ON user_badges(user_id);
 
 -- ============================================================
 -- CERTIFICATES
 -- ============================================================
-CREATE TABLE certificates (
+CREATE TABLE IF NOT EXISTS certificates (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   module_id INTEGER REFERENCES modules(id),
@@ -296,12 +296,12 @@ CREATE TABLE certificates (
   issued_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_cert_user ON certificates(user_id);
+CREATE INDEX IF NOT EXISTS idx_cert_user ON certificates(user_id);
 
 -- ============================================================
 -- PAYMENTS
 -- ============================================================
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   amount_kobo INTEGER NOT NULL,
@@ -314,12 +314,12 @@ CREATE TABLE payments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_payments_user ON payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
 
 -- ============================================================
 -- HAZARD MAP (V1 stretch / V2)
 -- ============================================================
-CREATE TABLE hazard_pins (
+CREATE TABLE IF NOT EXISTS hazard_pins (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   hazard_type hazard_type NOT NULL,
@@ -332,13 +332,13 @@ CREATE TABLE hazard_pins (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_hazard_location ON hazard_pins(latitude, longitude);
-CREATE INDEX idx_hazard_expires ON hazard_pins(expires_at);
+CREATE INDEX IF NOT EXISTS idx_hazard_location ON hazard_pins(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_hazard_expires ON hazard_pins(expires_at);
 
 -- ============================================================
 -- ANALYTICS EVENT LOG (for V2 AI training)
 -- ============================================================
-CREATE TABLE analytics_events (
+CREATE TABLE IF NOT EXISTS analytics_events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   event_type VARCHAR(50) NOT NULL,  -- 'quiz_answer', 'screen_view', 'lesson_start', 'lesson_complete', 'mock_start', etc
@@ -347,9 +347,9 @@ CREATE TABLE analytics_events (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_events_user ON analytics_events(user_id);
-CREATE INDEX idx_events_type ON analytics_events(event_type);
-CREATE INDEX idx_events_created ON analytics_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_events_user ON analytics_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_events_type ON analytics_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_events_created ON analytics_events(created_at);
 
 -- ============================================================
 -- UPDATED_AT TRIGGER
@@ -362,14 +362,14 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-CREATE TRIGGER update_module_progress_updated_at BEFORE UPDATE ON user_module_progress
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN CREATE TRIGGER update_module_progress_updated_at BEFORE UPDATE ON user_module_progress
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-CREATE TRIGGER update_lesson_progress_updated_at BEFORE UPDATE ON user_lesson_progress
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN CREATE TRIGGER update_lesson_progress_updated_at BEFORE UPDATE ON user_lesson_progress
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); EXCEPTION WHEN duplicate_object THEN null; END $$;
