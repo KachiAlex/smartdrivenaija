@@ -42,18 +42,34 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   };
 
   return (
-    <div className="size-full flex flex-col bg-gradient-to-br from-background to-muted/20 p-6">
+    <div className="size-full flex flex-col bg-gradient-to-br from-background to-muted/20 p-6 relative overflow-hidden">
+      {/* Nigerian-inspired pattern overlay */}
+      <div className="absolute inset-0 opacity-3">
+        <div className="absolute inset-0 nigerian-pattern" />
+      </div>
+
+      {/* Animated accent circle */}
+      <motion.div
+        animate={{ scale: [1, 1.3, 1], opacity: [0.05, 0.1, 0.05] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary/20 blur-3xl"
+      />
+
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3 mb-12 pt-8"
+        className="flex items-center gap-3 mb-12 pt-8 relative z-10"
       >
-        <div className="p-3 rounded-2xl bg-primary">
+        <motion.div
+          whileHover={{ rotate: [0, 10, -10, 0] }}
+          transition={{ duration: 0.5 }}
+          className="p-3 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 shadow-lg"
+        >
           <Car className="w-8 h-8 text-white" />
-        </div>
+        </motion.div>
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 800 }}>SmartDrive Naija</h1>
-          <p className="text-sm text-muted-foreground">Welcome back!</p>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, fontFamily: "Poppins" }}>SmartDrive Naija</h1>
+          <p className="text-sm text-muted-foreground font-medium">Welcome back!</p>
         </div>
       </motion.div>
 
@@ -61,16 +77,16 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="flex-1 flex flex-col"
+        className="flex-1 flex flex-col relative z-10"
       >
-        <h2 className="mb-2" style={{ fontSize: "1.75rem" }}>Login to Continue</h2>
-        <p className="text-muted-foreground mb-8">
+        <h2 className="mb-2" style={{ fontSize: "1.875rem", fontWeight: 700, fontFamily: "Poppins" }}>Login to Continue</h2>
+        <p className="text-muted-foreground mb-8 font-medium">
           Enter your phone number to access your account
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone" className="font-medium">Phone Number</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -79,7 +95,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 placeholder="+234 800 000 0000"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="pl-12 h-12"
+                className="pl-12 h-12 border-2 focus:border-primary/50 transition-all"
                 required
               />
             </div>
@@ -88,23 +104,35 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             </p>
           </div>
 
-          <Card className="p-4 bg-accent/10 border-accent/20">
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            className="p-4 bg-gradient-to-r from-accent/10 to-accent/5 border-2 border-accent/20 rounded-xl"
+          >
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-accent/20">
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+                className="p-2 rounded-lg bg-accent/20"
+              >
                 <span className="text-2xl">🇳🇬</span>
-              </div>
+              </motion.div>
               <div className="flex-1">
-                <h4 className="mb-1">Nigerian Numbers Only</h4>
+                <h4 className="mb-1 font-semibold">Nigerian Numbers Only</h4>
                 <p className="text-sm text-muted-foreground">
                   This service is currently available for Nigerian phone numbers only.
                 </p>
               </div>
             </div>
-          </Card>
+          </motion.div>
 
-          <Button type="submit" className="w-full h-12" size="lg" disabled={isSubmitting || !phoneNumber}>
-            {isSubmitting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Sending...</> : 'Send Verification Code'}
-          </Button>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Button type="submit" className="w-full h-12 bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-600/90 shadow-lg" size="lg" disabled={isSubmitting || !phoneNumber}>
+              {isSubmitting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Sending...</> : 'Send Verification Code'}
+            </Button>
+          </motion.div>
         </form>
       </motion.div>
     </div>

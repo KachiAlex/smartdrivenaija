@@ -37,21 +37,34 @@ export function ModulesScreen({ onNavigate }: ModulesScreenProps) {
 
   return (
     <div className="size-full overflow-auto bg-background pb-24">
-      <div className="bg-gradient-to-br from-primary/10 to-accent/10 p-6 pb-8">
+      <div className="bg-gradient-to-br from-primary via-emerald-600 to-secondary text-white p-6 pb-10 rounded-b-[2rem] relative overflow-hidden">
+        {/* Nigerian-inspired pattern overlay */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0 nigerian-pattern" />
+        </div>
+
+        {/* Animated accent circle */}
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 4, repeat: Infinity }}
+          className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-accent/30 blur-3xl"
+        />
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="relative z-10"
         >
-          <h1 className="mb-2" style={{ fontSize: "1.75rem" }}>
+          <h1 className="mb-2" style={{ fontSize: "1.875rem", fontWeight: 700, fontFamily: "Poppins" }}>
             Learning Modules
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-white/80 font-medium">
             Complete all modules to master Nigerian driving
           </p>
         </motion.div>
       </div>
 
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-4 -mt-4">
         {modules.map((mod, index) => (
           <motion.div
             key={mod.id}
