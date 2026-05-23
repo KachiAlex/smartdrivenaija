@@ -14,6 +14,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Strip /api prefix from requests (Vercel rewrites add it)
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api/')) {
+    req.url = req.url.slice(4); // Remove '/api' prefix
+  }
+  next();
+});
+
 // Routes
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
