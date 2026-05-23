@@ -51,8 +51,12 @@ router.post('/otp/request', async (req, res, next) => {
       [cleanPhone, code, expiresAt]
     );
 
-    // Send OTP via Termii SMS
+    // Send OTP via both SMS and Email for maximum reliability
     const termiiApiKey = process.env.TERMII_API_KEY;
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const sentVia = [];
+
+    // Send via Termii SMS
     if (termiiApiKey && termiiApiKey !== 'your_termii_api_key') {
       try {
         const response = await fetch('https://api.ng.termii.com/api/sms/send', {
@@ -72,14 +76,33 @@ router.post('/otp/request', async (req, res, next) => {
           const errorData = await response.json();
           console.error('Termii SMS error:', errorData);
         } else {
-          const data = await response.json();
-          console.log('Termii SMS sent:', data);
+          console.log('Termii SMS sent successfully');
+          sentVia.push('sms');
         }
       } catch (smsErr) {
         console.error('Failed to send Termii SMS:', smsErr.message);
       }
-    } else {
-      // Development mode — log OTP to console
+    }
+
+    // Send via Resend Email
+    if (resendApiKey && resendApiKey !== 're_dev_placeholder' && resendApiKey !== 're_your_api_key_here') {
+      try {
+        const resend = new Resend(resendApiKey);
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || 'otp@smartdrivenaija.com',
+          to: [cleanPhone + '@smartdrivenaija.com'],
+          subject: 'SmartDrive Naija - Verification Code',
+          text: `Your SmartDrive Naija verification code is: ${code}. It expires in ${expiryMinutes} minutes.\n\nIf you did not request this code, please ignore this email.`,
+        });
+        console.log('Resend Email sent successfully');
+        sentVia.push('email');
+      } catch (emailErr) {
+        console.error('Failed to send Resend Email:', emailErr.message);
+      }
+    }
+
+    // Development mode — log OTP to console if nothing was sent
+    if (sentVia.length === 0) {
       console.log(`[DEV] OTP for ${cleanPhone}: ${code}`);
     }
 
