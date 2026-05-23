@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 
 interface LoginScreenProps {
-  onLogin: (phone: string) => void;
+  onLogin: (phone: string, email?: string) => void;
 }
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
@@ -21,17 +21,20 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneNumber) return;
-
-    // Normalize: ensure +234 prefix
-    let cleanPhone = phoneNumber.replace(/\s/g, '').replace(/^0/, '+234');
-    if (!cleanPhone.startsWith('+234')) {
-      cleanPhone = '+234' + cleanPhone;
+    if (deliveryMethod === 'sms' && !phoneNumber) {
+      toast.error('Please enter your phone number');
+      return;
     }
 
     if (deliveryMethod === 'email' && !email) {
       toast.error('Please enter your email address');
       return;
+    }
+
+    // Normalize phone: ensure +234 prefix
+    let cleanPhone = phoneNumber.replace(/\s/g, '').replace(/^0/, '+234');
+    if (!cleanPhone.startsWith('+234')) {
+      cleanPhone = '+234' + cleanPhone;
     }
 
     setIsSubmitting(true);
@@ -40,7 +43,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       if (result._dev_otp) {
         toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
       }
-      onLogin(cleanPhone);
+      onLogin(cleanPhone, deliveryMethod === 'email' ? email : undefined);
     } catch (err: any) {
       toast.error(err.message || 'Failed to send OTP');
     } finally {
@@ -123,31 +126,37 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="font-medium">Phone Number</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+234 800 000 0000"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="pl-12 h-12 border-2 focus:border-primary/50 transition-all"
-                required
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {deliveryMethod === 'sms' ? "We'll send you a verification code via SMS" : "Phone is required for account lookup"}
-            </p>
-          </div>
+          {/* Phone Input - shown when SMS is selected */}
+          {deliveryMethod === 'sms' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-2"
+            >
+              <Label htmlFor="phone" className="font-medium">Phone Number</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+234 800 000 0000"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="pl-12 h-12 border-2 focus:border-primary/50 transition-all"
+                  required={deliveryMethod === 'sms'}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                We'll send you a verification code via SMS
+              </p>
+            </motion.div>
+          )}
 
           {/* Email Input - shown when Email delivery is selected */}
           {deliveryMethod === 'email' && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               className="space-y-2"
             >
               <Label htmlFor="email" className="font-medium">Email Address</Label>

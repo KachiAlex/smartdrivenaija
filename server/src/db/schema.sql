@@ -28,7 +28,8 @@ CREATE TYPE hazard_type AS ENUM ('pothole', 'broken_light', 'flooding', 'acciden
 -- ============================================================
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  phone VARCHAR(20) UNIQUE NOT NULL,
+  phone VARCHAR(20) UNIQUE,
+  email VARCHAR(255) UNIQUE,
   full_name VARCHAR(100),
   role user_role DEFAULT 'learner',
   preferred_language language_code DEFAULT 'en',

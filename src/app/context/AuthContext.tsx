@@ -10,7 +10,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   requestOTP: (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => Promise<{ expiresIn: number; sentVia: string[]; _dev_otp?: string }>;
-  verifyOTP: (phone: string, code: string) => Promise<void>;
+  verifyOTP: (phone: string, code: string, email?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
   refreshProfile: () => Promise<void>;
@@ -63,8 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { expiresIn: result.expiresIn, sentVia: result.sentVia, _dev_otp: result._dev_otp };
   }, []);
 
-  const verifyOTP = useCallback(async (phone: string, code: string) => {
-    const result = await api.verifyOTP(phone, code);
+  const verifyOTP = useCallback(async (phone: string, code: string, email?: string) => {
+    const result = await api.verifyOTP(phone, code, email);
     api.setTokens(result.accessToken, result.refreshToken);
     setState({
       user: result.user,

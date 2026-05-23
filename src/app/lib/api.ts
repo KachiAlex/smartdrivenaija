@@ -103,7 +103,7 @@ class ApiClient {
     );
   }
 
-  async verifyOTP(phone: string, code: string) {
+  async verifyOTP(phone: string, code: string, email?: string) {
     return this.request<{
       accessToken: string;
       refreshToken: string;
@@ -111,7 +111,7 @@ class ApiClient {
       isNewUser: boolean;
     }>('/auth/otp/verify', {
       method: 'POST',
-      body: JSON.stringify({ phone, code }),
+      body: JSON.stringify({ phone, email, code }),
       skipAuth: true,
     });
   }

@@ -8,11 +8,12 @@ import { toast } from "sonner";
 
 interface OTPScreenProps {
   phoneNumber?: string;
+  email?: string;
   onVerify: () => void;
   onBack: () => void;
 }
 
-export function OTPScreen({ phoneNumber = "+234 800 000 0000", onVerify, onBack }: OTPScreenProps) {
+export function OTPScreen({ phoneNumber = "+234 800 000 0000", email, onVerify, onBack }: OTPScreenProps) {
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -35,7 +36,7 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", onVerify, onBack 
     setCanResend(false);
     setOtp("");
     try {
-      const result = await requestOTP(phoneNumber);
+      const result = await requestOTP(phoneNumber, email, email ? 'email' : 'sms');
       toast.success('New code sent!');
       if (result._dev_otp) {
         toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
@@ -50,7 +51,7 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", onVerify, onBack 
 
     setIsVerifying(true);
     try {
-      await verifyOTP(phoneNumber, otp);
+      await verifyOTP(phoneNumber, otp, email);
       onVerify();
     } catch (err: any) {
       toast.error(err.message || 'Invalid OTP');
@@ -79,11 +80,11 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", onVerify, onBack 
 
       <div className="flex-1">
         <h2 className="text-center mb-2" style={{ fontSize: "1.75rem" }}>
-          Verify Your Number
+          {email ? 'Verify Your Email' : 'Verify Your Number'}
         </h2>
         <p className="text-center text-muted-foreground mb-8">
           Enter the 6-digit code sent to<br />
-          <span className="font-heading" style={{ fontWeight: 600 }}>{phoneNumber}</span>
+          <span className="font-heading" style={{ fontWeight: 600 }}>{email || phoneNumber}</span>
         </p>
 
         <div className="flex justify-center mb-8">

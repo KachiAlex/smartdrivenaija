@@ -34,7 +34,11 @@ router.post('/otp/request', async (req, res, next) => {
     const allowSms = normalizedMethod === 'sms' || normalizedMethod === 'both';
     const allowEmail = normalizedMethod === 'email' || normalizedMethod === 'both';
 
-    if (!phone || !/^\+234\d{10}$/.test(phone.replace(/\s/g, ''))) {
+    // Determine identifier: email for email delivery, phone otherwise
+    const identifier = allowEmail ? (email || phone) : phone;
+    const isEmailIdentifier = identifier && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+    if (allowSms && (!phone || !/^\+234\d{10}$/.test(phone.replace(/\s/g, '')))) {
       return res.status(400).json({ error: 'Valid Nigerian phone number required (+234XXXXXXXXXX)' });
     }
 
@@ -42,21 +46,21 @@ router.post('/otp/request', async (req, res, next) => {
       return res.status(400).json({ error: 'Valid email required for email delivery' });
     }
 
-    const cleanPhone = phone.replace(/\s/g, '');
+    const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
     const code = generateOTP(parseInt(process.env.OTP_LENGTH || '6'));
     const expiryMinutes = parseInt(process.env.OTP_EXPIRY_MINUTES || '10');
     const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
 
-    // Invalidate any existing unused OTPs for this phone
+    // Invalidate any existing unused OTPs for this identifier
     await pool.query(
-      `UPDATE otp_codes SET verified = true WHERE phone = $1 AND verified = false`,
-      [cleanPhone]
+      `UPDATE otp_codes SET verified = true WHERE (phone = $1 OR phone = $2) AND verified = false`,
+      [cleanPhone, identifier]
     );
 
-    // Store new OTP
+    // Store new OTP with the identifier
     await pool.query(
       `INSERT INTO otp_codes (phone, code, expires_at) VALUES ($1, $2, $3)`,
-      [cleanPhone, code, expiresAt]
+      [identifier, code, expiresAt]
     );
 
     // Send OTP via configured channels based on deliveryMethod
@@ -148,19 +152,21 @@ router.post('/otp/request', async (req, res, next) => {
 // POST /auth/otp/verify
 router.post('/otp/verify', async (req, res, next) => {
   try {
-    const { phone, code } = req.body;
-    if (!phone || !code) {
-      return res.status(400).json({ error: 'Phone and OTP code required' });
+    const { phone, email, code } = req.body;
+    const identifier = email || phone;
+    if (!identifier || !code) {
+      return res.status(400).json({ error: 'Identifier and OTP code required' });
     }
 
-    const cleanPhone = phone.replace(/\s/g, '');
+    const cleanIdentifier = identifier.replace(/\s/g, '');
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanIdentifier);
 
     // Find valid OTP
     const otpResult = await pool.query(
       `SELECT id, code, attempts FROM otp_codes 
        WHERE phone = $1 AND verified = false AND expires_at > NOW()
        ORDER BY created_at DESC LIMIT 1`,
-      [cleanPhone]
+      [cleanIdentifier]
     );
 
     if (otpResult.rows.length === 0) {
@@ -185,16 +191,28 @@ router.post('/otp/verify', async (req, res, next) => {
     // Mark OTP as verified
     await pool.query(`UPDATE otp_codes SET verified = true WHERE id = $1`, [otpRecord.id]);
 
-    // Find or create user
-    let userResult = await pool.query(`SELECT * FROM users WHERE phone = $1`, [cleanPhone]);
+    // Find or create user by phone or email
+    let userResult;
+    if (isEmail) {
+      userResult = await pool.query(`SELECT * FROM users WHERE email = $1`, [cleanIdentifier]);
+    } else {
+      userResult = await pool.query(`SELECT * FROM users WHERE phone = $1`, [cleanIdentifier]);
+    }
 
     let isNewUser = false;
     if (userResult.rows.length === 0) {
       isNewUser = true;
-      userResult = await pool.query(
-        `INSERT INTO users (phone) VALUES ($1) RETURNING *`,
-        [cleanPhone]
-      );
+      if (isEmail) {
+        userResult = await pool.query(
+          `INSERT INTO users (email) VALUES ($1) RETURNING *`,
+          [cleanIdentifier]
+        );
+      } else {
+        userResult = await pool.query(
+          `INSERT INTO users (phone) VALUES ($1) RETURNING *`,
+          [cleanIdentifier]
+        );
+      }
     }
 
     const user = userResult.rows[0];
@@ -213,6 +231,7 @@ router.post('/otp/verify', async (req, res, next) => {
       user: {
         id: user.id,
         phone: user.phone,
+        email: user.email,
         fullName: user.full_name,
         role: user.role,
         preferredLanguage: user.preferred_language,

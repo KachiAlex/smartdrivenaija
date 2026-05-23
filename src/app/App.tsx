@@ -41,6 +41,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("splash");
   const [activeTab, setActiveTab] = useState("home");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
 
@@ -85,8 +86,9 @@ function AppContent() {
     navigate(tab as Screen);
   };
 
-  const handleLoginSuccess = (phone: string) => {
+  const handleLoginSuccess = (phone: string, userEmail?: string) => {
     setPhoneNumber(phone);
+    setEmail(userEmail || "");
     setCurrentScreen("otp");
   };
 
@@ -108,6 +110,7 @@ function AppContent() {
       {currentScreen === "otp" && (
         <OTPScreen
           phoneNumber={phoneNumber}
+          email={email}
           onVerify={handleOTPVerified}
           onBack={() => setCurrentScreen("login")}
         />
