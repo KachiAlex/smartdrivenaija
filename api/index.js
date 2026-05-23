@@ -26,5 +26,7 @@ app.use('/leaderboard', leaderboardRoutes);
 // Error handling
 app.use(errorHandler);
 
-// Export for Vercel
-module.exports = app;
+// Export for Vercel serverless function
+module.exports = (req, res) => {
+  app(req, res);
+};
