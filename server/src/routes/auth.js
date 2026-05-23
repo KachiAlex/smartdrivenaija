@@ -51,12 +51,12 @@ router.post('/otp/request', async (req, res, next) => {
       [cleanPhone, code, expiresAt]
     );
 
-    // Send OTP via both SMS and Email for maximum reliability
+    // Send OTP via configured channels (SMS or Email or both)
     const termiiApiKey = process.env.TERMII_API_KEY;
     const resendApiKey = process.env.RESEND_API_KEY;
     const sentVia = [];
 
-    // Send via Termii SMS
+    // Send via Termii SMS (optional)
     if (termiiApiKey && termiiApiKey !== 'your_termii_api_key') {
       try {
         const senderId = process.env.TERMII_SENDER_ID;
@@ -103,7 +103,7 @@ router.post('/otp/request', async (req, res, next) => {
       }
     }
 
-    // Send via Resend Email
+    // Send via Resend Email (optional)
     if (resendApiKey && resendApiKey !== 're_dev_placeholder' && resendApiKey !== 're_your_api_key_here') {
       try {
         const resend = new Resend(resendApiKey);
@@ -126,7 +126,8 @@ router.post('/otp/request', async (req, res, next) => {
     }
 
     res.json({
-      message: 'OTP sent successfully',
+      message: sentVia.length > 0 ? 'OTP sent successfully' : 'OTP generated (check server logs)',
+      sentVia: sentVia.length > 0 ? sentVia : ['console'],
       expiresIn: expiryMinutes * 60,
       // Include OTP in dev mode for testing
       ...(process.env.NODE_ENV === 'development' && { _dev_otp: code }),
