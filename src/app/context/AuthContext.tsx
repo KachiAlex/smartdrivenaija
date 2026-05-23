@@ -9,7 +9,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  requestOTP: (phone: string) => Promise<{ expiresIn: number; _dev_otp?: string }>;
+  requestOTP: (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => Promise<{ expiresIn: number; sentVia: string[]; _dev_otp?: string }>;
   verifyOTP: (phone: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
@@ -58,9 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('auth:expired', handleExpired);
   }, []);
 
-  const requestOTP = useCallback(async (phone: string) => {
-    const result = await api.requestOTP(phone);
-    return { expiresIn: result.expiresIn, _dev_otp: result._dev_otp };
+  const requestOTP = useCallback(async (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => {
+    const result = await api.requestOTP(phone, email, deliveryMethod);
+    return { expiresIn: result.expiresIn, sentVia: result.sentVia, _dev_otp: result._dev_otp };
   }, []);
 
   const verifyOTP = useCallback(async (phone: string, code: string) => {

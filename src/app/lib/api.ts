@@ -96,10 +96,10 @@ class ApiClient {
   }
 
   // ── Auth ──────────────────────────────────────────────────
-  async requestOTP(phone: string) {
-    return this.request<{ message: string; expiresIn: number; _dev_otp?: string }>(
+  async requestOTP(phone: string, email?: string, deliveryMethod: 'sms' | 'email' | 'both' = 'sms') {
+    return this.request<{ message: string; expiresIn: number; sentVia: string[]; _dev_otp?: string }>(
       '/auth/otp/request',
-      { method: 'POST', body: JSON.stringify({ phone }), skipAuth: true }
+      { method: 'POST', body: JSON.stringify({ phone, email, deliveryMethod }), skipAuth: true }
     );
   }
 

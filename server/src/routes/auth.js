@@ -29,9 +29,17 @@ function generateTokens(user) {
 // POST /auth/otp/request
 router.post('/otp/request', async (req, res, next) => {
   try {
-    const { phone } = req.body;
+    const { phone, email, deliveryMethod = 'sms' } = req.body;
+    const normalizedMethod = deliveryMethod.toLowerCase();
+    const allowSms = normalizedMethod === 'sms' || normalizedMethod === 'both';
+    const allowEmail = normalizedMethod === 'email' || normalizedMethod === 'both';
+
     if (!phone || !/^\+234\d{10}$/.test(phone.replace(/\s/g, ''))) {
       return res.status(400).json({ error: 'Valid Nigerian phone number required (+234XXXXXXXXXX)' });
+    }
+
+    if (allowEmail && (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      return res.status(400).json({ error: 'Valid email required for email delivery' });
     }
 
     const cleanPhone = phone.replace(/\s/g, '');
@@ -51,13 +59,13 @@ router.post('/otp/request', async (req, res, next) => {
       [cleanPhone, code, expiresAt]
     );
 
-    // Send OTP via configured channels (SMS or Email or both)
+    // Send OTP via configured channels based on deliveryMethod
     const termiiApiKey = process.env.TERMII_API_KEY;
     const resendApiKey = process.env.RESEND_API_KEY;
     const sentVia = [];
 
-    // Send via Termii SMS (optional)
-    if (termiiApiKey && termiiApiKey !== 'your_termii_api_key') {
+    // Send via Termii SMS (when deliveryMethod is sms or both)
+    if (allowSms && termiiApiKey && termiiApiKey !== 'your_termii_api_key') {
       try {
         const senderId = process.env.TERMII_SENDER_ID;
         let response = await fetch('https://api.ng.termii.com/api/sms/send', {
@@ -103,13 +111,13 @@ router.post('/otp/request', async (req, res, next) => {
       }
     }
 
-    // Send via Resend Email (optional)
-    if (resendApiKey && resendApiKey !== 're_dev_placeholder' && resendApiKey !== 're_your_api_key_here') {
+    // Send via Resend Email (when deliveryMethod is email or both)
+    if (allowEmail && resendApiKey && resendApiKey !== 're_dev_placeholder' && resendApiKey !== 're_your_api_key_here') {
       try {
         const resend = new Resend(resendApiKey);
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || 'otp@smartdrivenaija.com',
-          to: [cleanPhone + '@smartdrivenaija.com'],
+          to: [email],
           subject: 'SmartDrive Naija - Verification Code',
           text: `Your SmartDrive Naija verification code is: ${code}. It expires in ${expiryMinutes} minutes.\n\nIf you did not request this code, please ignore this email.`,
         });

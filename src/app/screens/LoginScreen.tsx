@@ -3,7 +3,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card } from "../components/ui/card";
-import { Car, Phone, Loader2 } from "lucide-react";
+import { Car, Phone, Mail, Loader2, MessageSquare, AtSign } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
@@ -14,6 +14,8 @@ interface LoginScreenProps {
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState<'sms' | 'email'>('sms');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { requestOTP } = useAuth();
 
@@ -27,9 +29,14 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       cleanPhone = '+234' + cleanPhone;
     }
 
+    if (deliveryMethod === 'email' && !email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const result = await requestOTP(cleanPhone);
+      const result = await requestOTP(cleanPhone, email || undefined, deliveryMethod);
       if (result._dev_otp) {
         toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
       }
@@ -85,6 +92,37 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Delivery Method Toggle */}
+          <div className="space-y-2">
+            <Label className="font-medium">Receive OTP via</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod('sms')}
+                className={`flex items-center justify-center gap-2 h-12 rounded-xl border-2 transition-all font-medium ${
+                  deliveryMethod === 'sms'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-muted bg-muted/50 text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                SMS
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod('email')}
+                className={`flex items-center justify-center gap-2 h-12 rounded-xl border-2 transition-all font-medium ${
+                  deliveryMethod === 'email'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-muted bg-muted/50 text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                <Mail className="w-4 h-4" />
+                Email
+              </button>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="phone" className="font-medium">Phone Number</Label>
             <div className="relative">
@@ -100,9 +138,36 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              We'll send you a verification code
+              {deliveryMethod === 'sms' ? "We'll send you a verification code via SMS" : "Phone is required for account lookup"}
             </p>
           </div>
+
+          {/* Email Input - shown when Email delivery is selected */}
+          {deliveryMethod === 'email' && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-2"
+            >
+              <Label htmlFor="email" className="font-medium">Email Address</Label>
+              <div className="relative">
+                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-12 h-12 border-2 focus:border-primary/50 transition-all"
+                  required={deliveryMethod === 'email'}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                We'll send your verification code to this email
+              </p>
+            </motion.div>
+          )}
 
           <motion.div
             whileHover={{ scale: 1.01 }}
