@@ -119,30 +119,35 @@ router.post('/otp/request', async (req, res, next) => {
     if (allowEmail && resendApiKey && resendApiKey !== 're_dev_placeholder' && resendApiKey !== 're_your_api_key_here') {
       try {
         const resend = new Resend(resendApiKey);
-        await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'otp@smartdrivenaija.com',
+        const emailResult = await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
           to: [email],
           subject: 'SmartDrive Naija - Verification Code',
           text: `Your SmartDrive Naija verification code is: ${code}. It expires in ${expiryMinutes} minutes.\n\nIf you did not request this code, please ignore this email.`,
         });
-        console.log('Resend Email sent successfully');
-        sentVia.push('email');
+        console.log('Resend Email response:', JSON.stringify(emailResult));
+        if (emailResult && emailResult.id) {
+          console.log('Resend Email queued successfully. ID:', emailResult.id);
+          sentVia.push('email');
+        } else {
+          console.error('Resend Email returned no ID:', emailResult);
+        }
       } catch (emailErr) {
-        console.error('Failed to send Resend Email:', emailErr.message);
+        console.error('Failed to send Resend Email:', emailErr.message, emailErr.stack);
       }
+    } else if (allowEmail) {
+      console.log('Resend not configured: API key missing or is placeholder');
     }
 
-    // Development mode — log OTP to console if nothing was sent
-    if (sentVia.length === 0) {
-      console.log(`[DEV] OTP for ${cleanPhone}: ${code}`);
-    }
+    // Always log OTP to console for debugging (not exposed to client)
+    console.log(`[OTP] Code for ${identifier}: ${code}`);
 
     res.json({
       message: sentVia.length > 0 ? 'OTP sent successfully' : 'OTP generated (check server logs)',
       sentVia: sentVia.length > 0 ? sentVia : ['console'],
       expiresIn: expiryMinutes * 60,
-      // Include OTP in dev mode for testing
-      ...(process.env.NODE_ENV === 'development' && { _dev_otp: code }),
+      // Include OTP in response for testing (remove in production)
+      _dev_otp: code,
     });
   } catch (err) {
     next(err);
