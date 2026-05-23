@@ -7,7 +7,7 @@ import progressRoutes from '../server/src/routes/progress.js';
 import quizRoutes from '../server/src/routes/quiz.js';
 import mockTestRoutes from '../server/src/routes/mockTest.js';
 import leaderboardRoutes from '../server/src/routes/leaderboard.js';
-import errorHandler from '../server/src/middleware/errorHandler.js';
+import { errorHandler } from '../server/src/middleware/errorHandler.js';
 
 const app = express();
 
