@@ -59,22 +59,41 @@ router.post('/otp/request', async (req, res, next) => {
     // Send via Termii SMS
     if (termiiApiKey && termiiApiKey !== 'your_termii_api_key') {
       try {
-        const response = await fetch('https://api.ng.termii.com/api/sms/send', {
+        const senderId = process.env.TERMII_SENDER_ID;
+        let response = await fetch('https://api.ng.termii.com/api/sms/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             api_key: termiiApiKey,
             to: cleanPhone.replace('+', ''),
-            from: process.env.TERMII_SENDER_ID || 'SmartDrive',
+            ...(senderId && { from: senderId }),
             sms: `Your SmartDrive Naija verification code is: ${code}. It expires in ${expiryMinutes} minutes.`,
             type: 'plain',
             channel: 'generic',
           }),
         });
 
+        let data = await response.json();
+
+        // If sender ID not found, retry without custom sender
+        if (!response.ok && data.message?.includes('SenderId not found')) {
+          console.log('Custom sender ID not registered, retrying with default sender...');
+          response = await fetch('https://api.ng.termii.com/api/sms/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              api_key: termiiApiKey,
+              to: cleanPhone.replace('+', ''),
+              sms: `Your SmartDrive Naija verification code is: ${code}. It expires in ${expiryMinutes} minutes.`,
+              type: 'plain',
+              channel: 'generic',
+            }),
+          });
+          data = await response.json();
+        }
+
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Termii SMS error:', errorData);
+          console.error('Termii SMS error:', data);
         } else {
           console.log('Termii SMS sent successfully');
           sentVia.push('sms');
