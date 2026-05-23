@@ -36,18 +36,20 @@ export function ModulesScreen({ onNavigate }: ModulesScreenProps) {
   };
 
   return (
-    <div className="size-full overflow-auto bg-background pb-24">
-      <div className="bg-gradient-to-br from-primary via-emerald-600 to-secondary text-white p-6 pb-10 rounded-b-[2rem] relative overflow-hidden">
-        {/* Nigerian-inspired pattern overlay */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0 nigerian-pattern" />
-        </div>
-
-        {/* Animated accent circle */}
+    <div className="size-full overflow-auto bg-[#FAFBFF] pb-28">
+      <div className="relative p-6 pb-10 rounded-b-[2.5rem] overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" }}
+      >
+        {/* Animated mesh blobs */}
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
-          transition={{ duration: 4, repeat: Infinity }}
-          className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-accent/30 blur-3xl"
+          animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/30 blur-[70px]"
         />
 
         <motion.div
@@ -55,7 +57,7 @@ export function ModulesScreen({ onNavigate }: ModulesScreenProps) {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10"
         >
-          <h1 className="mb-2" style={{ fontSize: "1.875rem", fontWeight: 700, fontFamily: "Poppins" }}>
+          <h1 className="mb-2 text-white" style={{ fontSize: "1.875rem", fontWeight: 700, fontFamily: "Poppins" }}>
             Learning Modules
           </h1>
           <p className="text-white/80 font-medium">

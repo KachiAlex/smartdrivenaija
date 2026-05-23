@@ -79,14 +79,14 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
 
   if (!hasStarted) {
     return (
-      <div className="size-full flex flex-col items-center justify-center bg-background p-6">
+      <div className="size-full flex flex-col items-center justify-center bg-[#FAFBFF] p-6 pb-28">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="p-8 rounded-full bg-secondary/10 mb-6"
+          className="p-8 rounded-full bg-[#0F172A]/10 mb-6"
         >
-          <FileCheck className="w-20 h-20 text-secondary" />
+          <FileCheck className="w-20 h-20 text-[#0F172A]" />
         </motion.div>
 
         <motion.div
@@ -95,29 +95,29 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
           transition={{ delay: 0.2 }}
           className="text-center mb-8 max-w-md"
         >
-          <h1 className="mb-4" style={{ fontSize: "2rem" }}>
+          <h1 className="mb-4 text-[#0F172A]" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "Poppins" }}>
             Mock Theory Test
           </h1>
-          <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+          <p className="text-[#64748B] text-lg leading-relaxed mb-6">
             This is a practice test that simulates the actual FRSC driving theory exam.
           </p>
 
-          <Card className="p-6 text-left space-y-4">
+          <Card className="p-6 text-left space-y-4 glass-card border-[#6366F1]/10">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Questions</span>
-              <span className="font-heading" style={{ fontWeight: 600 }}>40</span>
+              <span className="text-[#64748B]">Questions</span>
+              <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>40</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Time Limit</span>
-              <span className="font-heading" style={{ fontWeight: 600 }}>30 minutes</span>
+              <span className="text-[#64748B]">Time Limit</span>
+              <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>30 minutes</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Pass Mark</span>
-              <span className="font-heading" style={{ fontWeight: 600 }}>70%</span>
+              <span className="text-[#64748B]">Pass Mark</span>
+              <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>70%</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Reward</span>
-              <Badge className="bg-accent text-accent-foreground">+1000 XP</Badge>
+              <span className="text-[#64748B]">Reward</span>
+              <Badge className="bg-[#F59E0B] text-[#0F172A] border-0">+1000 XP</Badge>
             </div>
           </Card>
         </motion.div>
@@ -128,10 +128,14 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
           transition={{ delay: 0.3 }}
           className="w-full max-w-md space-y-3"
         >
-          <Button onClick={handleStart} className="w-full h-12" size="lg" disabled={loading.mockTest}>
-            {loading.mockTest ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Loading...</> : 'Start Test'}
-          </Button>
-          <Button onClick={() => onNavigate("home")} variant="outline" className="w-full h-12" size="lg">
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button onClick={handleStart} className="w-full h-12 shadow-lg shadow-[#6366F1]/20" size="lg" disabled={loading.mockTest}
+              style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+            >
+              {loading.mockTest ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Loading...</> : 'Start Test'}
+            </Button>
+          </motion.div>
+          <Button onClick={() => onNavigate("home")} variant="outline" className="w-full h-12 border-[#6366F1]/30 text-[#6366F1]" size="lg">
             Back to Home
           </Button>
         </motion.div>
@@ -141,8 +145,8 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
 
   if (questions.length === 0) {
     return (
-      <div className="size-full flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <div className="size-full flex items-center justify-center bg-[#FAFBFF]">
+        <Loader2 className="w-10 h-10 text-[#6366F1] animate-spin" />
       </div>
     );
   }
@@ -184,8 +188,8 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
   const answeredCount = answers.filter(a => a !== null).length;
 
   return (
-    <div className="size-full flex flex-col bg-background">
-      <div className="bg-secondary text-white p-6 pb-4">
+    <div className="size-full flex flex-col bg-[#FAFBFF]">
+      <div className="text-white p-6 pb-4" style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}>
         <div className="flex items-center justify-between mb-4">
           <Badge className="bg-white/20 text-white border-white/30">
             Mock Theory Test
@@ -213,8 +217,8 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
             onClick={toggleFlag}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${
               flaggedQuestions.has(currentQuestion)
-                ? "bg-accent/20 text-accent-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                ? "bg-[#F59E0B]/20 text-[#D97706]"
+                : "bg-[#E2E8F0] text-[#64748B] hover:bg-[#E2E8F0]/80"
             }`}
           >
             <Flag className={`w-4 h-4 ${flaggedQuestions.has(currentQuestion) ? "fill-current" : ""}`} />
@@ -245,19 +249,19 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
                     whileTap={{ scale: 0.99 }}
                   >
                     <Card
-                      className={`p-4 cursor-pointer transition-all ${
+                      className={`p-4 cursor-pointer transition-all border-2 ${
                         isSelected
-                          ? "border-secondary bg-secondary/10"
-                          : "hover:border-secondary/50"
+                          ? "border-[#6366F1] bg-[#6366F1]/10"
+                          : "border-[#E2E8F0] hover:border-[#6366F1]/50"
                       }`}
                       onClick={() => handleAnswer(index)}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center font-heading ${
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             isSelected
-                              ? "bg-secondary text-white"
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-[#6366F1] text-white"
+                              : "bg-[#E2E8F0] text-[#64748B]"
                           }`}
                           style={{ fontWeight: 600 }}
                         >
@@ -274,7 +278,7 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
         </AnimatePresence>
       </div>
 
-      <div className="p-6 border-t bg-background space-y-3">
+      <div className="p-6 border-t border-[#E2E8F0] bg-[#FAFBFF] space-y-3">
         <div className="flex gap-3">
           <Button
             onClick={previousQuestion}

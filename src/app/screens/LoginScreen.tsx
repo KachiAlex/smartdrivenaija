@@ -103,7 +103,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       >
         <h2 className="mb-2 text-[#0F172A]" style={{ fontSize: "1.875rem", fontWeight: 700, fontFamily: "Poppins" }}>Login to Continue</h2>
         <p className="text-[#64748B] mb-8 font-medium">
-          Enter your phone number to access your account
+          {deliveryMethod === 'sms' ? 'Enter your phone number to access your account' : 'Enter your email to access your account'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -192,20 +192,30 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
           <motion.div
             whileHover={{ scale: 1.01 }}
-            className="p-4 bg-gradient-to-r from-[#F59E0B]/10 to-[#FB923C]/5 border-2 border-[#F59E0B]/20 rounded-xl"
+            className={`p-4 border-2 rounded-xl ${
+              deliveryMethod === 'sms'
+                ? 'bg-gradient-to-r from-[#F59E0B]/10 to-[#FB923C]/5 border-[#F59E0B]/20'
+                : 'bg-gradient-to-r from-[#6366F1]/10 to-[#8B5CF6]/5 border-[#6366F1]/20'
+            }`}
           >
             <div className="flex items-start gap-3">
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
-                className="p-2 rounded-lg bg-[#F59E0B]/20"
+                className={`p-2 rounded-lg ${
+                  deliveryMethod === 'sms' ? 'bg-[#F59E0B]/20' : 'bg-[#6366F1]/20'
+                }`}
               >
-                <span className="text-2xl">🇳🇬</span>
+                <span className="text-2xl">{deliveryMethod === 'sms' ? '🇳🇬' : '✉️'}</span>
               </motion.div>
               <div className="flex-1">
-                <h4 className="mb-1 font-semibold text-[#0F172A]">Nigerian Numbers Only</h4>
+                <h4 className="mb-1 font-semibold text-[#0F172A]">
+                  {deliveryMethod === 'sms' ? 'Nigerian Numbers Only' : 'Email Verification'}
+                </h4>
                 <p className="text-sm text-[#64748B]">
-                  This service is currently available for Nigerian phone numbers only.
+                  {deliveryMethod === 'sms'
+                    ? 'This service is currently available for Nigerian phone numbers only.'
+                    : 'We will send a 6-digit verification code to your email address.'}
                 </p>
               </div>
             </div>
@@ -215,7 +225,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Button type="submit" className="w-full h-12 shadow-lg shadow-[#6366F1]/30" size="lg" disabled={isSubmitting || !phoneNumber}
+            <Button type="submit" className="w-full h-12 shadow-lg shadow-[#6366F1]/30" size="lg" disabled={isSubmitting || (deliveryMethod === 'sms' ? !phoneNumber : !email)}
               style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
             >
               {isSubmitting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Sending...</> : 'Send Verification Code'}

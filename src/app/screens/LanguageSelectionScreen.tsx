@@ -38,16 +38,16 @@ export function LanguageSelectionScreen({ onComplete }: LanguageSelectionScreenP
   };
 
   return (
-    <div className="size-full flex flex-col bg-background p-6 pb-24">
+    <div className="size-full flex flex-col bg-[#FAFBFF] p-6 pb-24">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="pt-8 mb-8"
       >
-        <h1 className="mb-2" style={{ fontSize: "2rem" }}>
+        <h1 className="mb-2 text-[#0F172A]" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "Poppins" }}>
           Choose Your Language
         </h1>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-[#64748B] text-lg">
           Select your preferred language for learning
         </p>
       </motion.div>
@@ -76,10 +76,14 @@ export function LanguageSelectionScreen({ onComplete }: LanguageSelectionScreenP
         </div>
       </motion.div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-background border-t">
-        <Button onClick={handleComplete} className="w-full h-12" size="lg" disabled={isSaving}>
-          {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...</> : 'Continue'}
-        </Button>
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#FAFBFF] border-t border-[#E2E8F0]">
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button onClick={handleComplete} className="w-full h-12 shadow-lg shadow-[#6366F1]/20" size="lg" disabled={isSaving}
+            style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+          >
+            {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...</> : 'Continue'}
+          </Button>
+        </motion.div>
       </div>
     </div>
   );

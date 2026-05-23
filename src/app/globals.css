@@ -90,6 +90,45 @@ body,
   position: relative;
 }
 
+/* Ensure all interactive elements have minimum 44px touch targets */
+button,
+[role="button"],
+a,
+input,
+select,
+textarea,
+[tabindex]:not([tabindex="-1"]) {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile-safe padding for content areas */
+.mobile-safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.mobile-safe-b {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Responsive font scaling for small screens */
+@media (max-width: 360px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Prevent content from being hidden behind notches */
+@supports (padding: max(0px)) {
+  .safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
 /* ===== COSMIC DRIVE ANIMATIONS ===== */
 
 /* Mesh gradient background */

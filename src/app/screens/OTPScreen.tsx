@@ -62,8 +62,8 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", email, onVerify, 
   };
 
   return (
-    <div className="size-full flex flex-col bg-background p-6">
-      <button onClick={onBack} className="flex items-center gap-2 mb-8 pt-4 text-muted-foreground">
+    <div className="size-full flex flex-col bg-[#FAFBFF] p-6">
+      <button onClick={onBack} className="flex items-center gap-2 mb-8 pt-4 text-[#64748B]">
         <ArrowLeft className="w-5 h-5" />
         <span>Back</span>
       </button>
@@ -73,18 +73,18 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", email, onVerify, 
         animate={{ opacity: 1, scale: 1 }}
         className="flex justify-center mb-8"
       >
-        <div className="p-6 rounded-full bg-primary/10">
-          <Shield className="w-16 h-16 text-primary" />
+        <div className="p-6 rounded-full bg-[#6366F1]/10">
+          <Shield className="w-16 h-16 text-[#6366F1]" />
         </div>
       </motion.div>
 
       <div className="flex-1">
-        <h2 className="text-center mb-2" style={{ fontSize: "1.75rem" }}>
+        <h2 className="text-center mb-2 text-[#0F172A]" style={{ fontSize: "1.75rem", fontWeight: 700, fontFamily: "Poppins" }}>
           {email ? 'Verify Your Email' : 'Verify Your Number'}
         </h2>
-        <p className="text-center text-muted-foreground mb-8">
+        <p className="text-center text-[#64748B] mb-8">
           Enter the 6-digit code sent to<br />
-          <span className="font-heading" style={{ fontWeight: 600 }}>{email || phoneNumber}</span>
+          <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>{email || phoneNumber}</span>
         </p>
 
         <div className="flex justify-center mb-8">
@@ -102,24 +102,27 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", email, onVerify, 
 
         <div className="text-center mb-8">
           {canResend ? (
-            <Button variant="link" onClick={handleResend} className="text-primary">
+            <Button variant="link" onClick={handleResend} className="text-[#6366F1]">
               Resend Code
             </Button>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Resend code in <span className="font-heading" style={{ fontWeight: 600 }}>{timer}s</span>
+            <p className="text-sm text-[#64748B]">
+              Resend code in <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>{timer}s</span>
             </p>
           )}
         </div>
 
-        <Button
-          onClick={handleVerify}
-          className="w-full h-12"
-          size="lg"
-          disabled={otp.length !== 6 || isVerifying}
-        >
-          {isVerifying ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Verifying...</> : 'Verify & Continue'}
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            onClick={handleVerify}
+            className="w-full h-12 shadow-lg shadow-[#6366F1]/20"
+            size="lg"
+            disabled={otp.length !== 6 || isVerifying}
+            style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+          >
+            {isVerifying ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Verifying...</> : 'Verify & Continue'}
+          </Button>
+        </motion.div>
       </div>
     </div>
   );

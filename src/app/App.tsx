@@ -103,7 +103,7 @@ function AppContent() {
   const showBottomNav = ["home", "modules", "mock-test", "leaderboard", "profile"].includes(currentScreen);
 
   return (
-    <div className="size-full bg-background">
+    <div className="min-h-[100dvh] min-h-screen w-full bg-background relative">
       {currentScreen === "splash" && <SplashScreen onComplete={handleSplashComplete} />}
       {currentScreen === "onboarding" && <OnboardingScreen onComplete={() => setCurrentScreen("login")} />}
       {currentScreen === "login" && <LoginScreen onLogin={handleLoginSuccess} />}

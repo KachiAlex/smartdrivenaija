@@ -68,8 +68,8 @@ export function LessonScreen({ onNavigate, moduleId }: LessonScreenProps) {
 
   if (loading.moduleContent || !content) {
     return (
-      <div className="size-full flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <div className="size-full flex items-center justify-center bg-[#FAFBFF]">
+        <Loader2 className="w-10 h-10 text-[#6366F1] animate-spin" />
       </div>
     );
   }

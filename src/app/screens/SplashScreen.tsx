@@ -16,7 +16,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   }, [onComplete]);
 
   return (
-    <div className="size-full flex flex-col items-center justify-center bg-[#0F172A] relative overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0F172A] overflow-hidden">
       {/* Cosmic mesh gradient blobs */}
       <motion.div
         animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
