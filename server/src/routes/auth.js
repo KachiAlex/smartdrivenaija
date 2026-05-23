@@ -51,15 +51,33 @@ router.post('/otp/request', async (req, res, next) => {
       [cleanPhone, code, expiresAt]
     );
 
-    // Send OTP via Resend
-    if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_your_api_key_here') {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'otp@smartdrivenaija.com',
-        to: [`${cleanPhone}@sms.smartdrivenaija.com`], // SMS gateway integration point
-        subject: 'SmartDrive Naija - Verification Code',
-        text: `Your SmartDrive Naija verification code is: ${code}. It expires in ${expiryMinutes} minutes.`,
-      });
+    // Send OTP via Termii SMS
+    const termiiApiKey = process.env.TERMII_API_KEY;
+    if (termiiApiKey && termiiApiKey !== 'your_termii_api_key') {
+      try {
+        const response = await fetch('https://api.ng.termii.com/api/sms/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: termiiApiKey,
+            to: cleanPhone.replace('+', ''),
+            from: process.env.TERMII_SENDER_ID || 'SmartDrive',
+            sms: `Your SmartDrive Naija verification code is: ${code}. It expires in ${expiryMinutes} minutes.`,
+            type: 'plain',
+            channel: 'generic',
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Termii SMS error:', errorData);
+        } else {
+          const data = await response.json();
+          console.log('Termii SMS sent:', data);
+        }
+      } catch (smsErr) {
+        console.error('Failed to send Termii SMS:', smsErr.message);
+      }
     } else {
       // Development mode — log OTP to console
       console.log(`[DEV] OTP for ${cleanPhone}: ${code}`);
