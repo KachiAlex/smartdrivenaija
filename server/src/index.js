@@ -29,6 +29,7 @@ import insurancePortalRoutes from './routes/insurancePortal.js';
 import renewalMarketplaceRoutes from './routes/renewalMarketplace.js';
 import computerVisionRoutes from './routes/computerVision.js';
 import biometricRoutes from './routes/biometric.js';
+import adminRoutes from './routes/admin.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -80,6 +81,7 @@ app.use('/insurance', insurancePortalRoutes);
 app.use('/renewal', renewalMarketplaceRoutes);
 app.use('/computer-vision', computerVisionRoutes);
 app.use('/biometric', biometricRoutes);
+app.use('/admin', adminRoutes);
 
 // Error handler
 app.use(errorHandler);
