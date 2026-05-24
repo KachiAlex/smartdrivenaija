@@ -76,6 +76,13 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     }
   }, [currentSlide, onComplete]);
 
+  const prevSlide = useCallback(() => {
+    if (currentSlide > 0) {
+      setDirection(-1);
+      setCurrentSlide((s) => s - 1);
+    }
+  }, [currentSlide]);
+
   const goToSlide = (index: number) => {
     if (index === currentSlide) return;
     setDirection(index > currentSlide ? 1 : -1);
@@ -84,6 +91,20 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   const slide = SLIDES[currentSlide];
   const isLast = currentSlide === SLIDES.length - 1;
+
+  /* Swipe handler */
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: { offset: { x: number }; velocity: { x: number } }
+  ) => {
+    const swipeThreshold = 50;
+    const velocityThreshold = 500;
+    if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
+      nextSlide();
+    } else if ((info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) && currentSlide > 0) {
+      prevSlide();
+    }
+  };
 
   const variants = {
     enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
@@ -102,6 +123,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       exit="exit"
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="absolute inset-0 flex flex-col items-center"
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.2}
+      onDragEnd={handleDragEnd}
     >
       {/* Logo centered in upper area */}
       <motion.div
@@ -135,6 +160,19 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         >
           {slide.description}
         </motion.p>
+
+        {/* Next button for welcome slide */}
+        <motion.button
+          onClick={nextSlide}
+          className="mt-6 px-8 py-3 rounded-full bg-white text-[#1D3557] font-semibold text-sm shadow-lg"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.4 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Get Started <ArrowRight className="w-4 h-4 inline ml-1" />
+        </motion.button>
       </div>
     </motion.div>
   );
@@ -150,6 +188,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       exit="exit"
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="absolute inset-0 flex flex-col"
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.2}
+      onDragEnd={handleDragEnd}
     >
       {/* Top area — illustration fills this naturally via background image */}
       <div className="flex-1" />
