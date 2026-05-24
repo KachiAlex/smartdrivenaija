@@ -19,11 +19,11 @@ router.get('/', async (req, res, next) => {
     const userId = req.user.id;
 
     const result = await pool.query(`
-      SELECT 
+      SELECT
         m.id, m.slug, m.icon, m.sort_order, m.is_free, m.is_premium,
         m.estimated_minutes, m.xp_reward,
         m.title_en, m.description_en,
-        COALESCE(ump.status, CASE WHEN m.is_free THEN 'available' ELSE 'locked' END) as status,
+        COALESCE(ump.status, CASE WHEN m.is_free THEN 'available'::module_status ELSE 'locked'::module_status END) as status,
         COALESCE(ump.progress_percent, 0) as progress_percent,
         COALESCE(ump.lessons_completed, 0) as lessons_completed,
         COALESCE(ump.total_lessons, 0) as total_lessons,
