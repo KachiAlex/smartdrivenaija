@@ -301,3 +301,437 @@ textarea,
   transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateZ(10px);
   box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
 }
+
+/* ============================================================================
+   COMPREHENSIVE MOBILE RESPONSIVENESS
+   ============================================================================ */
+
+/* Safe area CSS variables for notched devices */
+:root {
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+  --header-height: 56px;
+  --bottom-nav-height: 80px;
+  --keyboard-height: 0px;
+}
+
+/* iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS specific adjustments */
+  .ios-height-fix {
+    height: -webkit-fill-available;
+  }
+  
+  /* Prevent callout menu on long press */
+  .no-callout {
+    -webkit-touch-callout: none;
+  }
+  
+  /* Smooth scrolling on iOS */
+  .ios-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Android-specific fixes */
+@supports not (-webkit-touch-callout: none) {
+  .android-scroll {
+    overscroll-behavior: contain;
+  }
+}
+
+/* Mobile-first responsive breakpoints */
+/* Extra small devices (phones, 360px and up) */
+@media (min-width: 360px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Small devices (large phones, 480px and up) */
+@media (min-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+  
+  .mobile-container {
+    max-width: 100%;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+  
+  :root {
+    --header-height: 64px;
+    --bottom-nav-height: 0px;
+  }
+  
+  .tablet-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Large devices (desktops, 1024px and up) */
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+  
+  .desktop-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .desktop-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 100vh;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .landscape-hide {
+    display: none !important;
+  }
+  
+  .landscape-compact {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (pointer: coarse) {
+  /* Larger touch targets */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Remove hover effects on touch */
+  .no-touch-hover:hover {
+    transform: none !important;
+  }
+  
+  /* Active state for touch feedback */
+  .touch-active:active {
+    transform: scale(0.96);
+    opacity: 0.8;
+  }
+  
+  /* Disable text selection on interactive elements */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* High-DPI / Retina screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .retina-border {
+    border-width: 0.5px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .auto-dark {
+    color-scheme: dark;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .no-reduce-motion {
+    animation-duration: 0.3s !important;
+    transition-duration: 0.3s !important;
+  }
+}
+
+/* Keyboard open detection (approximate) */
+@supports (height: env(keyboard-inset-height)) {
+  :root {
+    --keyboard-height: env(keyboard-inset-height);
+  }
+}
+
+/* Layout utilities */
+.mobile-full-height {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height */
+  height: -webkit-fill-available;
+}
+
+.safe-area-inset {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.keyboard-aware {
+  padding-bottom: var(--keyboard-height);
+  transition: padding-bottom 0.3s ease;
+}
+
+/* Bottom navigation spacing */
+.has-bottom-nav {
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+}
+
+/* Status bar spacing for PWA */
+.status-bar-spacer {
+  height: env(safe-area-inset-top);
+}
+
+/* Pull to refresh indicator */
+.pull-indicator {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.pull-indicator.pulling {
+  transform: translateX(-50%) translateY(20px) rotate(180deg);
+}
+
+/* Sheet/Drawer for mobile */
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sheet.open {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: #cbd5e1;
+  border-radius: 2px;
+  margin: 12px auto;
+}
+
+/* Toast positioning for mobile */
+@media (max-width: 640px) {
+  [data-sonner-toaster] {
+    left: 16px !important;
+    right: 16px !important;
+    bottom: calc(16px + var(--bottom-nav-height) + env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+  }
+}
+
+/* Modal overlay for mobile */
+.mobile-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+
+@media (min-width: 640px) {
+  .mobile-modal {
+    align-items: center;
+  }
+}
+
+/* Card swipe actions */
+.swipeable-card {
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.swipe-actions {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swipe-actions.left {
+  left: 0;
+  padding-left: 16px;
+}
+
+.swipe-actions.right {
+  right: 0;
+  padding-right: 16px;
+}
+
+/* Horizontal scroll container */
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 12px;
+  padding: 4px;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-scroll > * {
+  flex-shrink: 0;
+}
+
+/* Sticky header for mobile */
+.sticky-header {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 40;
+  background: white;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* FAB (Floating Action Button) positioning */
+.fab {
+  position: fixed;
+  bottom: calc(24px + var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  right: 24px;
+  z-index: 30;
+}
+
+@media (min-width: 768px) {
+  .fab {
+    bottom: 24px;
+  }
+}
+
+/* Typography responsive scaling */
+.text-responsive-xs {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.text-responsive-sm {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.text-responsive-base {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1.125rem, 4vw, 1.5rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+/* Grid responsive layouts */
+.responsive-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .responsive-grid-2 {
+    gap: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-grid-2 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Image aspect ratio for mobile */
+.aspect-mobile {
+  aspect-ratio: 9 / 16;
+}
+
+@media (min-width: 768px) {
+  .aspect-mobile {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* Focus visible for mobile accessibility */
+.focus-visible-ring:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Loading skeleton for mobile */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
