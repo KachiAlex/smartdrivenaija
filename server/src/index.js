@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import modulesRoutes from './routes/modules.js';
@@ -10,7 +12,10 @@ import mockTestRoutes from './routes/mockTest.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
