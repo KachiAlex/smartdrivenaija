@@ -8,7 +8,7 @@ import { Trophy, Medal, Award, TrendingUp, Loader2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 export function LeaderboardScreen() {
-  const [activeTab, setActiveTab] = useState<"weekly" | "alltime">("weekly");
+  const [activeTab, setActiveTab] = useState<"weekly" | "alltime" | "score">("weekly");
   const { leaderboard, loadLeaderboard, loading } = useApp();
 
   useEffect(() => {
@@ -63,10 +63,11 @@ export function LeaderboardScreen() {
       </div>
 
       <div className="p-6 flex-1 overflow-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "weekly" | "alltime")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#E2E8F0]/50">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "weekly" | "alltime" | "score")} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6 bg-[#E2E8F0]/50">
             <TabsTrigger value="weekly">This Week</TabsTrigger>
             <TabsTrigger value="alltime">All Time</TabsTrigger>
+            <TabsTrigger value="score">Driver Score</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-3">
@@ -106,10 +107,12 @@ export function LeaderboardScreen() {
                       <div className="text-right">
                         <div className="flex items-center gap-1 text-[#D97706] mb-1">
                           <TrendingUp className="w-4 h-4" />
-                          <span className="font-bold" style={{ fontFamily: "Poppins" }}>{user.xp}</span>
+                          <span className="font-bold" style={{ fontFamily: "Poppins" }}>
+                            {activeTab === 'score' ? (user.driverScore || 0) : user.xp}
+                          </span>
                         </div>
                         <p className="text-xs text-[#64748B] flex items-center gap-1">
-                          <span>🔥</span> {user.streak} days
+                          {activeTab === 'score' ? 'Score' : 'XP'} <span>🔥</span> {user.streak} days
                         </p>
                       </div>
                     </div>

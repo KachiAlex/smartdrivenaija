@@ -17,6 +17,9 @@ import { ResultsScreen } from "./screens/ResultsScreen";
 import { CertificateScreen } from "./screens/CertificateScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { LeaderboardScreen } from "./screens/LeaderboardScreen";
+import { WalletScreen } from "./screens/WalletScreen";
+import { EmergencyScreen } from "./screens/EmergencyScreen";
+import { FirstAidScreen } from "./screens/FirstAidScreen";
 import { BottomNav } from "./components/BottomNav";
 import { Toaster } from "./components/ui/sonner";
 
@@ -34,7 +37,10 @@ type Screen =
   | "results"
   | "certificate"
   | "profile"
-  | "leaderboard";
+  | "leaderboard"
+  | "wallet"
+  | "emergency"
+  | "first-aid";
 
 function AppContent() {
   const { isAuthenticated, isLoading, user, isNewUser } = useAuth();
@@ -100,7 +106,7 @@ function AppContent() {
     }
   };
 
-  const showBottomNav = ["home", "modules", "mock-test", "leaderboard", "profile"].includes(currentScreen);
+  const showBottomNav = ["home", "modules", "wallet", "mock-test", "leaderboard", "profile"].includes(currentScreen);
 
   return (
     <div className="min-h-[100dvh] min-h-screen w-full bg-background relative">
@@ -120,6 +126,9 @@ function AppContent() {
       )}
       {currentScreen === "home" && <HomeScreen onNavigate={navigate} />}
       {currentScreen === "modules" && <ModulesScreen onNavigate={navigate} />}
+      {currentScreen === "wallet" && <WalletScreen onNavigate={navigate} />}
+      {currentScreen === "emergency" && <EmergencyScreen onNavigate={navigate} />}
+      {currentScreen === "first-aid" && <FirstAidScreen onNavigate={navigate} onBack={() => setCurrentScreen("emergency")} />}
       {currentScreen === "lesson" && (
         <LessonScreen onNavigate={navigate} moduleId={selectedModuleId} lessonId={selectedLessonId} />
       )}

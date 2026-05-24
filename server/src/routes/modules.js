@@ -84,6 +84,7 @@ router.get('/:id/content', async (req, res, next) => {
       SELECT 
         l.id, l.slug, l.title_en, l.content_en, l.audio_url_en,
         l.sort_order, l.estimated_minutes, l.xp_reward,
+        l.is_microlesson, l.estimated_duration_minutes, l.microlesson_order,
         COALESCE(ulp.completed, false) as completed,
         COALESCE(ulp.time_spent_seconds, 0) as time_spent_seconds
       FROM lessons l
@@ -117,6 +118,9 @@ router.get('/:id/content', async (req, res, next) => {
         sortOrder: l.sort_order,
         estimatedMinutes: l.estimated_minutes,
         xpReward: l.xp_reward,
+        isMicrolesson: l.is_microlesson,
+        estimatedDurationMinutes: l.estimated_duration_minutes,
+        microlessonOrder: l.microlesson_order,
         completed: l.completed,
         timeSpentSeconds: l.time_spent_seconds,
       })),
@@ -129,6 +133,131 @@ router.get('/:id/content', async (req, res, next) => {
         explanation: q.explanation_en,
         difficulty: q.difficulty,
       })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /modules/:id/microlessons — get only microlessons for quick learning
+router.get('/:id/microlessons', async (req, res, next) => {
+  try {
+    const moduleId = parseInt(req.params.id);
+    const userId = req.user.id;
+
+    const modResult = await pool.query(`SELECT * FROM modules WHERE id = $1`, [moduleId]);
+    if (modResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    const mod = modResult.rows[0];
+
+    // Check access
+    const user = await pool.query(`SELECT is_premium FROM users WHERE id = $1`, [userId]);
+    if (!mod.is_free && !user.rows[0]?.is_premium) {
+      return res.status(403).json({ error: 'Premium access required', code: 'PREMIUM_REQUIRED' });
+    }
+
+    // Get only microlessons
+    const microlessons = await pool.query(`
+      SELECT 
+        l.id, l.slug, l.title_en, l.content_en, l.audio_url_en,
+        l.sort_order, l.estimated_duration_minutes, l.xp_reward, l.microlesson_order,
+        COALESCE(ulp.completed, false) as completed,
+        COALESCE(ulp.time_spent_seconds, 0) as time_spent_seconds
+      FROM lessons l
+      LEFT JOIN user_lesson_progress ulp ON ulp.lesson_id = l.id AND ulp.user_id = $2
+      WHERE l.module_id = $1 AND l.is_microlesson = TRUE
+      ORDER BY l.microlesson_order, l.sort_order
+    `, [moduleId, userId]);
+
+    res.json({
+      moduleId,
+      microlessons: microlessons.rows.map(l => ({
+        id: l.id,
+        slug: l.slug,
+        title: l.title_en,
+        content: l.content_en,
+        audioUrl: l.audio_url_en,
+        sortOrder: l.sort_order,
+        estimatedDurationMinutes: l.estimated_duration_minutes,
+        xpReward: l.xp_reward,
+        microlessonOrder: l.microlesson_order,
+        completed: l.completed,
+        timeSpentSeconds: l.time_spent_seconds,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /modules/:id/quick-learn — get quick learn summary for rapid learning
+router.get('/:id/quick-learn', async (req, res, next) => {
+  try {
+    const moduleId = parseInt(req.params.id);
+    const userId = req.user.id;
+
+    const modResult = await pool.query(`SELECT * FROM modules WHERE id = $1`, [moduleId]);
+    if (modResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    const mod = modResult.rows[0];
+
+    // Check access
+    const user = await pool.query(`SELECT is_premium FROM users WHERE id = $1`, [userId]);
+    if (!mod.is_free && !user.rows[0]?.is_premium) {
+      return res.status(403).json({ error: 'Premium access required', code: 'PREMIUM_REQUIRED' });
+    }
+
+    // Get microlessons for quick learning (3-minute lessons)
+    const microlessons = await pool.query(`
+      SELECT 
+        l.id, l.slug, l.title_en, l.content_en,
+        l.estimated_duration_minutes, l.xp_reward, l.microlesson_order,
+        COALESCE(ulp.completed, false) as completed
+      FROM lessons l
+      LEFT JOIN user_lesson_progress ulp ON ulp.lesson_id = l.id AND ulp.user_id = $2
+      WHERE l.module_id = $1 AND l.is_microlesson = TRUE
+      ORDER BY l.microlesson_order
+      LIMIT 5
+    `, [moduleId, userId]);
+
+    // Get key questions for quick review
+    const questions = await pool.query(`
+      SELECT id, topic_tag, question_en, options_en, answer_en, difficulty, explanation
+      FROM questions 
+      WHERE module_id = $1 AND difficulty IN ('easy', 'medium')
+      ORDER BY RANDOM()
+      LIMIT 5
+    `, [moduleId]);
+
+    res.json({
+      moduleId,
+      title: mod.title_en,
+      description: mod.description_en,
+      quickLearn: {
+        estimatedTotalMinutes: microlessons.rows.reduce((sum, l) => sum + (l.estimated_duration_minutes || 3), 0),
+        microlessons: microlessons.rows.map(l => ({
+          id: l.id,
+          title: l.title_en,
+          content: l.content_en,
+          estimatedMinutes: l.estimated_duration_minutes || 3,
+          xpReward: l.xp_reward,
+          order: l.microlesson_order,
+          completed: l.completed,
+        })),
+        quickReviewQuestions: questions.rows.map(q => ({
+          id: q.id,
+          topicTag: q.topic_tag,
+          question: q.question_en,
+          options: q.options_en,
+          answer: q.answer_en,
+          difficulty: q.difficulty,
+          explanation: q.explanation,
+        })),
+      },
     });
   } catch (err) {
     next(err);

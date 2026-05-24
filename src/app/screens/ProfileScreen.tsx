@@ -13,16 +13,32 @@ import {
   Moon,
   Globe,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Star
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
 import { useTheme } from "../context/ThemeContext";
+import { api } from "../lib/api";
+import { useState, useEffect } from "react";
 
 export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) => void }) {
   const { user, logout } = useAuth();
   const { progress } = useApp();
   const { theme, toggleTheme } = useTheme();
+  const [driverScore, setDriverScore] = useState<{ driverScore: number; scoreBreakdown: any } | null>(null);
+
+  useEffect(() => {
+    const fetchDriverScore = async () => {
+      try {
+        const scoreData = await api.getDriverScore();
+        setDriverScore(scoreData);
+      } catch (error) {
+        console.error('Failed to fetch driver score:', error);
+      }
+    };
+    fetchDriverScore();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -112,10 +128,81 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
       </div>
 
       <div className="p-6 space-y-6 -mt-4 relative z-10">
+        {/* Smart Driver Score Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+        >
+          <Card className="p-5 glass-card border-2 border-[#E63946]/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[#0F172A] font-bold flex items-center gap-2">
+                <Star className="w-5 h-5 text-[#E63946]" />
+                Smart Driver Score
+              </h3>
+              <Badge className="bg-[#E63946] text-white border-[#E63946]">
+                {driverScore?.driverScore || 0}/100
+              </Badge>
+            </div>
+            {driverScore?.scoreBreakdown && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#64748B]">Modules</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[#E63946] rounded-full transition-all"
+                        style={{ width: `${driverScore.scoreBreakdown.modules}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-[#0F172A]">{driverScore.scoreBreakdown.modules}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#64748B]">Quizzes</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[#F4A261] rounded-full transition-all"
+                        style={{ width: `${driverScore.scoreBreakdown.quizzes}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-[#0F172A]">{driverScore.scoreBreakdown.quizzes}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#64748B]">Streak</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[#F59E0B] rounded-full transition-all"
+                        style={{ width: `${driverScore.scoreBreakdown.streak}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-[#0F172A]">{driverScore.scoreBreakdown.streak}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#64748B]">XP</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[#10B981] rounded-full transition-all"
+                        style={{ width: `${driverScore.scoreBreakdown.xp}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-[#0F172A]">{driverScore.scoreBreakdown.xp}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
         >
           <h3 className="mb-4 text-[#0F172A] font-bold">Learning Progress</h3>
           <Card className="p-4 space-y-4 glass-card border-[#E63946]/10">

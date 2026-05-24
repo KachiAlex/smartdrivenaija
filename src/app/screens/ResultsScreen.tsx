@@ -3,7 +3,7 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { motion } from "motion/react";
-import { Trophy, TrendingUp, AlertCircle, CheckCircle, Share2 } from "lucide-react";
+import { Trophy, TrendingUp, AlertCircle, CheckCircle, Share2, MessageCircle } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { useApp } from "../context/AppContext";
@@ -23,6 +23,15 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
   const totalQuestions = result?.totalQuestions || 0;
   const wrong = totalQuestions - score;
   const xpEarned = result?.xpEarned || 0;
+
+  const handleWhatsAppShare = () => {
+    const message = passed
+      ? `🎉 I just scored ${totalScore}% on my SmartDrive Naija mock test! ${score}/${totalQuestions} correct. I'm ready for my driving test! 🚗 #SmartDriveNaija`
+      : `📚 I scored ${totalScore}% on my SmartDrive Naija mock test. ${score}/${totalQuestions} correct. Still practicing for my driving test! 🚗 #SmartDriveNaija`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   // Topic performance from mock test
   const topicPerformance = ('topicPerformance' in (result || {}))
@@ -215,9 +224,9 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
             </motion.div>
           )}
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" className="h-12 border-[#E63946]/30 text-[#E63946]">
-              <Share2 className="w-5 h-5 mr-2" />
-              Share
+            <Button onClick={handleWhatsAppShare} variant="outline" className="h-12 border-[#E63946]/30 text-[#E63946]">
+              <MessageCircle className="w-5 h-5 mr-2" />
+              WhatsApp
             </Button>
             <Button onClick={() => onNavigate("home")} variant="outline" className="h-12 border-[#E63946]/30 text-[#E63946]">
               Home

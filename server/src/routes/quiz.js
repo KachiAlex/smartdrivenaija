@@ -11,14 +11,33 @@ router.get('/:moduleId', async (req, res, next) => {
   try {
     const moduleId = parseInt(req.params.moduleId);
     const limit = parseInt(req.query.limit) || 10;
+    const difficulty = req.query.difficulty; // 'easy', 'medium', 'hard', 'expert'
+    const scenarioOnly = req.query.scenario === 'true';
 
-    const questions = await pool.query(`
-      SELECT id, topic_tag, question_en as question, options_en as options, difficulty
+    let query = `
+      SELECT id, topic_tag, question_en as question, options_en as options, 
+             answer_en as answer, difficulty, is_scenario, explanation
       FROM questions
       WHERE module_id = $1
-      ORDER BY RANDOM()
-      LIMIT $2
-    `, [moduleId, limit]);
+    `;
+    const params = [moduleId];
+    let paramCount = 1;
+
+    if (difficulty) {
+      paramCount++;
+      query += ` AND difficulty = $${paramCount}`;
+      params.push(difficulty);
+    }
+
+    if (scenarioOnly) {
+      paramCount++;
+      query += ` AND is_scenario = TRUE`;
+    }
+
+    query += ` ORDER BY RANDOM() LIMIT $${paramCount + 1}`;
+    params.push(limit);
+
+    const questions = await pool.query(query, params);
 
     res.json({
       moduleId,
@@ -27,7 +46,10 @@ router.get('/:moduleId', async (req, res, next) => {
         topicTag: q.topic_tag,
         question: q.question,
         options: q.options,
+        answer: q.answer,
         difficulty: q.difficulty,
+        isScenario: q.is_scenario,
+        explanation: q.explanation,
       })),
       totalQuestions: questions.rows.length,
     });
