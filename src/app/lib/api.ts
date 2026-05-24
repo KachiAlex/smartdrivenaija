@@ -95,25 +95,99 @@ class ApiClient {
     return res.json();
   }
 
-  // ── Auth ──────────────────────────────────────────────────
-  async requestOTP(phone: string, email?: string, deliveryMethod: 'sms' | 'email' | 'both' = 'sms') {
-    return this.request<{ message: string; expiresIn: number; sentVia: string[]; _dev_otp?: string }>(
-      '/auth/otp/request',
-      { method: 'POST', body: JSON.stringify({ phone, email, deliveryMethod }), skipAuth: true }
-    );
-  }
-
-  async verifyOTP(phone: string, code: string, email?: string) {
+  // ── Auth (Optimized Flow) ─────────────────────────────────
+  // Standard login: email/phone + password
+  async login(identifier: string, password: string) {
     return this.request<{
       accessToken: string;
       refreshToken: string;
       user: User;
-      isNewUser: boolean;
-    }>('/auth/otp/verify', {
+    }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ identifier, password }),
+      skipAuth: true,
+    });
+  }
+
+  // OTP login fallback (for passwordless users)
+  async requestLoginOTP(phone: string, email?: string, deliveryMethod: 'sms' | 'email' | 'both' = 'sms') {
+    return this.request<{ message: string; expiresIn: number; sentVia: string[]; _dev_otp?: string }>(
+      '/auth/login/otp-request',
+      { method: 'POST', body: JSON.stringify({ phone, email, deliveryMethod }), skipAuth: true }
+    );
+  }
+
+  async verifyLoginOTP(phone: string, code: string, email?: string) {
+    return this.request<{
+      accessToken: string;
+      refreshToken: string;
+      user: User;
+    }>('/auth/login/otp-verify', {
       method: 'POST',
       body: JSON.stringify({ phone, email, code }),
       skipAuth: true,
     });
+  }
+
+  // Registration flow: init → verify → complete
+  async registerInit(phone: string, email?: string, deliveryMethod: 'sms' | 'email' | 'both' = 'sms') {
+    return this.request<{ message: string; expiresIn: number; sentVia: string[]; _dev_otp?: string }>(
+      '/auth/register/init',
+      { method: 'POST', body: JSON.stringify({ phone, email, deliveryMethod }), skipAuth: true }
+    );
+  }
+
+  async registerVerifyOTP(phone: string, code: string, email?: string) {
+    return this.request<{ tempToken: string; message: string }>(
+      '/auth/register/verify-otp',
+      { method: 'POST', body: JSON.stringify({ phone, email, code }), skipAuth: true }
+    );
+  }
+
+  async registerComplete(tempToken: string, password: string, fullName: string, state?: string) {
+    return this.request<{
+      accessToken: string;
+      refreshToken: string;
+      user: User;
+    }>('/auth/register/complete', {
+      method: 'POST',
+      body: JSON.stringify({ tempToken, password, fullName, state }),
+      skipAuth: true,
+    });
+  }
+
+  // Password reset flow
+  async requestPasswordReset(phone: string, email?: string, deliveryMethod: 'sms' | 'email' | 'both' = 'sms') {
+    return this.request<{ message: string; expiresIn: number; _dev_otp?: string }>(
+      '/auth/password-reset/request',
+      { method: 'POST', body: JSON.stringify({ phone, email, deliveryMethod }), skipAuth: true }
+    );
+  }
+
+  async confirmPasswordReset(phone: string, code: string, newPassword: string, email?: string) {
+    return this.request<{ message: string }>(
+      '/auth/password-reset/confirm',
+      { method: 'POST', body: JSON.stringify({ phone, email, code, newPassword }), skipAuth: true }
+    );
+  }
+
+  // Authenticated password change
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.request<{ message: string }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  }
+
+  // Legacy OTP endpoints (kept for backward compatibility during transition)
+  async requestOTP(phone: string, email?: string, deliveryMethod: 'sms' | 'email' | 'both' = 'sms') {
+    // Redirect to new login OTP endpoint
+    return this.requestLoginOTP(phone, email, deliveryMethod);
+  }
+
+  async verifyOTP(phone: string, code: string, email?: string) {
+    // Redirect to new login OTP verify endpoint
+    return this.verifyLoginOTP(phone, code, email);
   }
 
   async logout() {

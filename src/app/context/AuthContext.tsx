@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: result.user,
       isAuthenticated: true,
       isLoading: false,
-      isNewUser: result.isNewUser,
+      isNewUser: !result.user?.onboardingCompleted,
     });
   }, []);
 
