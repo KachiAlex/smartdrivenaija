@@ -102,7 +102,7 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
             This is a practice test that simulates the actual FRSC driving theory exam.
           </p>
 
-          <Card className="p-6 text-left space-y-4 glass-card border-[#6366F1]/10">
+          <Card className="p-6 text-left space-y-4 glass-card border-[#E63946]/10">
             <div className="flex items-center justify-between">
               <span className="text-[#64748B]">Questions</span>
               <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>40</span>
@@ -129,13 +129,13 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
           className="w-full max-w-md space-y-3"
         >
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button onClick={handleStart} className="w-full h-12 shadow-lg shadow-[#6366F1]/20" size="lg" disabled={loading.mockTest}
-              style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+            <Button onClick={handleStart} className="w-full h-12 shadow-lg shadow-[#E63946]/20" size="lg" disabled={loading.mockTest}
+              style={{ background: "linear-gradient(135deg, #E63946, #F4A261)" }}
             >
               {loading.mockTest ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Loading...</> : 'Start Test'}
             </Button>
           </motion.div>
-          <Button onClick={() => onNavigate("home")} variant="outline" className="w-full h-12 border-[#6366F1]/30 text-[#6366F1]" size="lg">
+          <Button onClick={() => onNavigate("home")} variant="outline" className="w-full h-12 border-[#E63946]/30 text-[#E63946]" size="lg">
             Back to Home
           </Button>
         </motion.div>
@@ -146,7 +146,7 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
   if (questions.length === 0) {
     return (
       <div className="size-full flex items-center justify-center bg-[#FAFBFF]">
-        <Loader2 className="w-10 h-10 text-[#6366F1] animate-spin" />
+        <Loader2 className="w-10 h-10 text-[#E63946] animate-spin" />
       </div>
     );
   }
@@ -189,7 +189,7 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
 
   return (
     <div className="size-full flex flex-col bg-[#FAFBFF]">
-      <div className="text-white p-6 pb-4" style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}>
+      <div className="text-white p-6 pb-4" style={{ background: "linear-gradient(135deg, #E63946, #F4A261)" }}>
         <div className="flex items-center justify-between mb-4">
           <Badge className="bg-white/20 text-white border-white/30">
             Mock Theory Test
@@ -251,8 +251,8 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
                     <Card
                       className={`p-4 cursor-pointer transition-all border-2 ${
                         isSelected
-                          ? "border-[#6366F1] bg-[#6366F1]/10"
-                          : "border-[#E2E8F0] hover:border-[#6366F1]/50"
+                          ? "border-[#E63946] bg-[#E63946]/10"
+                          : "border-[#E2E8F0] hover:border-[#E63946]/50"
                       }`}
                       onClick={() => handleAnswer(index)}
                     >
@@ -260,7 +260,7 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             isSelected
-                              ? "bg-[#6366F1] text-white"
+                              ? "bg-[#E63946] text-white"
                               : "bg-[#E2E8F0] text-[#64748B]"
                           }`}
                           style={{ fontWeight: 600 }}

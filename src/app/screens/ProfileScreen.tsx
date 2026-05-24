@@ -41,18 +41,18 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
     <div className="size-full overflow-auto bg-[#FAFBFF] pb-28">
       {/* Cosmic header with mesh gradient */}
       <div className="relative p-6 pb-12 rounded-b-[2.5rem] overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" }}
+        style={{ background: "linear-gradient(135deg, #E63946 0%, #F4A261 40%, #0A1628 100%)" }}
       >
         {/* Animated mesh blobs */}
         <motion.div
           animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#E63946]/30 blur-[80px]"
         />
         <motion.div
           animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/30 blur-[70px]"
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F4A261]/20 blur-[70px]"
         />
 
         <motion.div
@@ -118,18 +118,18 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
           transition={{ delay: 0.2 }}
         >
           <h3 className="mb-4 text-[#0F172A] font-bold">Learning Progress</h3>
-          <Card className="p-4 space-y-4 glass-card border-[#6366F1]/10">
+          <Card className="p-4 space-y-4 glass-card border-[#E63946]/10">
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#64748B]">Completed Modules</span>
-              <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{completedModules}/{modules.length}</Badge>
+              <Badge className="bg-[#E63946]/10 text-[#E63946] border-[#E63946]/20">{completedModules}/{modules.length}</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#64748B]">Lessons Finished</span>
-              <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{completedLessons}/{totalLessons}</Badge>
+              <Badge className="bg-[#E63946]/10 text-[#E63946] border-[#E63946]/20">{completedLessons}/{totalLessons}</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#64748B]">Quizzes Passed</span>
-              <Badge className="bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20">{recentQuizzes}</Badge>
+              <Badge className="bg-[#E63946]/10 text-[#E63946] border-[#E63946]/20">{recentQuizzes}</Badge>
             </div>
           </Card>
         </motion.div>
@@ -140,7 +140,7 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
           transition={{ delay: 0.3 }}
         >
           <h3 className="mb-4 text-[#0F172A] font-bold">Settings</h3>
-          <Card className="divide-y glass-card border-[#6366F1]/10">
+          <Card className="divide-y glass-card border-[#E63946]/10">
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Globe className="w-5 h-5 text-[#64748B]" />

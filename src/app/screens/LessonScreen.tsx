@@ -69,7 +69,7 @@ export function LessonScreen({ onNavigate, moduleId }: LessonScreenProps) {
   if (loading.moduleContent || !content) {
     return (
       <div className="size-full flex items-center justify-center bg-[#FAFBFF]">
-        <Loader2 className="w-10 h-10 text-[#6366F1] animate-spin" />
+        <Loader2 className="w-10 h-10 text-[#E63946] animate-spin" />
       </div>
     );
   }
@@ -90,7 +90,7 @@ export function LessonScreen({ onNavigate, moduleId }: LessonScreenProps) {
             <ul className="space-y-2 ml-1">
               {lines.map((line, j) => (
                 <li key={j} className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#6366F1] mt-0.5 flex-shrink-0" />
+                  <Check className="w-5 h-5 text-[#E63946] mt-0.5 flex-shrink-0" />
                   <span className="text-[#64748B] leading-relaxed">{line.replace(/^•\s*/, '')}</span>
                 </li>
               ))}
@@ -105,18 +105,18 @@ export function LessonScreen({ onNavigate, moduleId }: LessonScreenProps) {
   return (
     <div className="size-full flex flex-col bg-[#FAFBFF]">
       <div className="relative p-6 pb-6 rounded-b-[2.5rem] overflow-hidden text-white"
-        style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" }}
+        style={{ background: "linear-gradient(135deg, #E63946 0%, #F4A261 40%, #0A1628 100%)" }}
       >
         {/* Animated mesh blobs */}
         <motion.div
           animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#E63946]/30 blur-[80px]"
         />
         <motion.div
           animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/30 blur-[70px]"
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F4A261]/20 blur-[70px]"
         />
         <motion.button
           initial={{ opacity: 0, x: -10 }}
@@ -160,7 +160,7 @@ export function LessonScreen({ onNavigate, moduleId }: LessonScreenProps) {
           onClick={() => setAudioEnabled(!audioEnabled)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E2E8F0] hover:bg-[#E2E8F0]/80 transition-colors text-[#0F172A]"
         >
-          {audioEnabled ? <Volume2 className="w-5 h-5 text-[#6366F1]" /> : <VolumeX className="w-5 h-5 text-[#64748B]" />}
+          {audioEnabled ? <Volume2 className="w-5 h-5 text-[#E63946]" /> : <VolumeX className="w-5 h-5 text-[#64748B]" />}
           <span className="text-sm font-medium">Audio {audioEnabled ? "On" : "Off"}</span>
         </button>
 
@@ -204,7 +204,7 @@ export function LessonScreen({ onNavigate, moduleId }: LessonScreenProps) {
               onClick={handleNext}
               className="flex-1 h-12 text-white"
               size="lg"
-              style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+              style={{ background: "linear-gradient(135deg, #E63946, #F4A261)" }}
             >
               Next Lesson <ChevronRight className="w-5 h-5 ml-2" />
             </Button>
@@ -213,7 +213,7 @@ export function LessonScreen({ onNavigate, moduleId }: LessonScreenProps) {
               onClick={handleTakeQuiz}
               className="flex-1 h-12 text-white"
               size="lg"
-              style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+              style={{ background: "linear-gradient(135deg, #E63946, #F4A261)" }}
             >
               Take Quiz
             </Button>

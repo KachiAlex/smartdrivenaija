@@ -34,13 +34,13 @@ export function LeaderboardScreen() {
   return (
     <div className="size-full flex flex-col bg-[#FAFBFF] pb-28">
       <div className="relative p-6 pb-6 rounded-b-[2.5rem] overflow-hidden text-white"
-        style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" }}
+        style={{ background: "linear-gradient(135deg, #E63946 0%, #F4A261 40%, #0A1628 100%)" }}
       >
         {/* Animated mesh blobs */}
         <motion.div
           animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#E63946]/30 blur-[80px]"
         />
         <motion.div
           animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
@@ -72,7 +72,7 @@ export function LeaderboardScreen() {
           <TabsContent value={activeTab} className="space-y-3">
             {loading.leaderboard ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="w-8 h-8 text-[#6366F1] animate-spin" />
+                <Loader2 className="w-8 h-8 text-[#E63946] animate-spin" />
               </div>
             ) : data.length === 0 ? (
               <p className="text-center text-[#64748B] py-8">No leaderboard data yet</p>
@@ -84,7 +84,7 @@ export function LeaderboardScreen() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card className={`p-4 glass-card ${user.isCurrentUser ? "border-[#6366F1] bg-[#6366F1]/5" : ""}`}>
+                  <Card className={`p-4 glass-card ${user.isCurrentUser ? "border-[#E63946] bg-[#E63946]/5" : ""}`}>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center justify-center w-10">
                         {getRankIcon(user.rank)}
@@ -99,7 +99,7 @@ export function LeaderboardScreen() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>{user.name}</p>
-                          {user.isCurrentUser && <Badge variant="secondary" className="text-xs bg-[#6366F1]/10 text-[#6366F1]">You</Badge>}
+                          {user.isCurrentUser && <Badge variant="secondary" className="text-xs bg-[#E63946]/10 text-[#E63946]">You</Badge>}
                         </div>
                       </div>
 
@@ -124,7 +124,7 @@ export function LeaderboardScreen() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-4"
               >
-                <Card className="p-4 glass-card border-[#6366F1] bg-[#6366F1]/5">
+                <Card className="p-4 glass-card border-[#E63946] bg-[#E63946]/5">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center justify-center w-10">
                       <span className="text-[#64748B] font-semibold" style={{ fontFamily: "Poppins" }}>#{currentUserRank}</span>
@@ -132,7 +132,7 @@ export function LeaderboardScreen() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>Your Rank</p>
-                        <Badge variant="secondary" className="text-xs bg-[#6366F1]/10 text-[#6366F1]">You</Badge>
+                        <Badge variant="secondary" className="text-xs bg-[#E63946]/10 text-[#E63946]">You</Badge>
                       </div>
                     </div>
                   </div>

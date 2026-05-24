@@ -37,18 +37,18 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
     <div className="size-full overflow-auto bg-[#FAFBFF] pb-28">
       {/* Cosmic header with mesh gradient */}
       <div className="relative p-6 pb-12 rounded-b-[2.5rem] overflow-hidden"
-        style={{ background: passed ? "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" : "linear-gradient(135deg, #64748B 0%, #94A3B8 100%)" }}
+        style={{ background: passed ? "linear-gradient(135deg, #E63946 0%, #F4A261 40%, #0A1628 100%)" : "linear-gradient(135deg, #64748B 0%, #94A3B8 100%)" }}
       >
         {/* Animated mesh blobs */}
         <motion.div
           animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#E63946]/30 blur-[80px]"
         />
         <motion.div
           animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/30 blur-[70px]"
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F4A261]/20 blur-[70px]"
         />
 
         <motion.div
@@ -94,9 +94,9 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
         >
           <h3 className="mb-4 text-[#0F172A] font-bold">Quick Stats</h3>
           <div className="grid grid-cols-2 gap-3">
-            <Card className="p-4 glass-card border-[#6366F1]/10">
+            <Card className="p-4 glass-card border-[#E63946]/10">
               <div className="flex items-center gap-3 mb-2">
-                <CheckCircle className="w-5 h-5 text-[#6366F1]" />
+                <CheckCircle className="w-5 h-5 text-[#E63946]" />
                 <span className="text-sm text-[#64748B]">Correct</span>
               </div>
               <p className="text-[#0F172A]" style={{ fontWeight: 700, fontSize: "1.5rem", fontFamily: "Poppins" }}>
@@ -132,14 +132,14 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
             transition={{ delay: 0.4 }}
           >
             <h3 className="mb-4 text-[#0F172A] font-bold">Topic Performance</h3>
-            <Card className="p-6 glass-card border-[#6366F1]/10">
+            <Card className="p-6 glass-card border-[#E63946]/10">
               <ChartContainer config={{}} className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={topicPerformance}>
                     <XAxis dataKey="topic" />
                     <YAxis />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="score" fill="#6366F1" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="score" fill="#E63946" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -154,7 +154,7 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
             transition={{ delay: 0.5 }}
           >
             <h3 className="mb-4 text-[#0F172A] font-bold">Weak Areas</h3>
-            <Card className="p-4 space-y-4 glass-card border-[#6366F1]/10">
+            <Card className="p-4 space-y-4 glass-card border-[#E63946]/10">
               {weakAreas.map((area: any, i: number) => (
                 <div key={i}>
                   <div className="flex items-center justify-between mb-2">
@@ -166,7 +166,7 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
                       initial={{ width: 0 }}
                       animate={{ width: `${area.percentage}%` }}
                       transition={{ duration: 0.8, ease: "easeOut" }}
-                      className="h-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-full"
+                      className="h-full bg-gradient-to-r from-[#E63946] to-[#F4A261] rounded-full"
                     />
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
                 <p className="text-sm text-[#64748B] mb-3">
                   Focus on First Aid & Accident Response to improve your score
                 </p>
-                <Button variant="outline" size="sm" onClick={() => onNavigate("modules")} className="border-[#6366F1]/30 text-[#6366F1]">
+                <Button variant="outline" size="sm" onClick={() => onNavigate("modules")} className="border-[#E63946]/30 text-[#E63946]">
                   Go to Module
                 </Button>
               </div>
@@ -207,19 +207,19 @@ export function ResultsScreen({ onNavigate }: ResultsScreenProps) {
         >
           {passed && (
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button onClick={() => onNavigate("certificate")} className="w-full h-12 shadow-lg shadow-[#6366F1]/20" size="lg"
-                style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+              <Button onClick={() => onNavigate("certificate")} className="w-full h-12 shadow-lg shadow-[#E63946]/20" size="lg"
+                style={{ background: "linear-gradient(135deg, #1D3557, #0A1628)" }}
               >
                 View Certificate
               </Button>
             </motion.div>
           )}
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" className="h-12 border-[#6366F1]/30 text-[#6366F1]">
+            <Button variant="outline" className="h-12 border-[#E63946]/30 text-[#E63946]">
               <Share2 className="w-5 h-5 mr-2" />
               Share
             </Button>
-            <Button onClick={() => onNavigate("home")} variant="outline" className="h-12 border-[#6366F1]/30 text-[#6366F1]">
+            <Button onClick={() => onNavigate("home")} variant="outline" className="h-12 border-[#E63946]/30 text-[#E63946]">
               Home
             </Button>
           </div>

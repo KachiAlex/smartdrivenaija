@@ -78,8 +78,8 @@ export function LanguageSelectionScreen({ onComplete }: LanguageSelectionScreenP
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#FAFBFF] border-t border-[#E2E8F0]">
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button onClick={handleComplete} className="w-full h-12 shadow-lg shadow-[#6366F1]/20" size="lg" disabled={isSaving}
-            style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+          <Button onClick={handleComplete} className="w-full h-12 shadow-lg shadow-[#E63946]/20" size="lg" disabled={isSaving}
+            style={{ background: "linear-gradient(135deg, #E63946, #F4A261)" }}
           >
             {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...</> : 'Continue'}
           </Button>

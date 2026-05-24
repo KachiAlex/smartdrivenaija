@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../components/ui/input-otp";
 import { motion } from "motion/react";
-import { ArrowLeft, Shield, Loader2 } from "lucide-react";
+import { ArrowLeft, Shield, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 
@@ -62,32 +62,96 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", email, onVerify, 
   };
 
   return (
-    <div className="size-full flex flex-col bg-[#FAFBFF] p-6">
-      <button onClick={onBack} className="flex items-center gap-2 mb-8 pt-4 text-[#64748B]">
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back</span>
-      </button>
-
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#0A1628] overflow-hidden">
+      {/* Glowing orbs */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex justify-center mb-8"
-      >
-        <div className="p-6 rounded-full bg-[#6366F1]/10">
-          <Shield className="w-16 h-16 text-[#6366F1]" />
-        </div>
-      </motion.div>
+        animate={{ scale: [1, 1.2, 1], opacity: [0.08, 0.15, 0.08] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[5%] right-[5%] w-64 h-64 rounded-full bg-[#E63946]/20 blur-[80px]"
+      />
+      <motion.div
+        animate={{ scale: [1, 1.15, 1], opacity: [0.06, 0.12, 0.06] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[15%] left-[10%] w-48 h-48 rounded-full bg-[#F4A261]/15 blur-[60px]"
+      />
 
-      <div className="flex-1">
-        <h2 className="text-center mb-2 text-[#0F172A]" style={{ fontSize: "1.75rem", fontWeight: 700, fontFamily: "Poppins" }}>
+      {/* Back button */}
+      <div className="relative z-10 px-6 pt-6">
+        <motion.button
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={onBack}
+          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm font-medium">Back</span>
+        </motion.button>
+      </div>
+
+      {/* Top branding area */}
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6">
+        <motion.div
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-6"
+        >
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#E63946] to-[#F4A261] flex items-center justify-center shadow-lg shadow-[#E63946]/20">
+            <Lock className="w-10 h-10 text-white" />
+          </div>
+        </motion.div>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.5 }}
+          className="text-white text-2xl font-bold mb-2"
+          style={{ fontFamily: "Poppins" }}
+        >
           {email ? 'Verify Your Email' : 'Verify Your Number'}
-        </h2>
-        <p className="text-center text-[#64748B] mb-8">
-          Enter the 6-digit code sent to<br />
-          <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>{email || phoneNumber}</span>
-        </p>
+        </motion.h2>
 
-        <div className="flex justify-center mb-8">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="text-white/60 text-sm text-center max-w-xs"
+        >
+          Enter the 6-digit code sent to your {email ? 'email' : 'phone'}
+        </motion.p>
+      </div>
+
+      {/* White bottom card */}
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.35, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-white rounded-t-[2.5rem] px-8 pt-8 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] relative z-10"
+      >
+        {/* Recipient pill */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="flex items-center justify-center gap-2 mb-6 p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]"
+        >
+          {email ? (
+            <Mail className="w-4 h-4 text-[#E63946]" />
+          ) : (
+            <MessageSquare className="w-4 h-4 text-[#E63946]" />
+          )}
+          <span className="text-sm font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>
+            {email || phoneNumber}
+          </span>
+        </motion.div>
+
+        {/* OTP Input */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="flex justify-center mb-6"
+        >
           <InputOTP maxLength={6} value={otp} onChange={setOtp}>
             <InputOTPGroup>
               <InputOTPSlot index={0} />
@@ -98,32 +162,61 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", email, onVerify, 
               <InputOTPSlot index={5} />
             </InputOTPGroup>
           </InputOTP>
-        </div>
+        </motion.div>
 
-        <div className="text-center mb-8">
+        {/* Timer / Resend */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-center mb-6"
+        >
           {canResend ? (
-            <Button variant="link" onClick={handleResend} className="text-[#6366F1]">
+            <button
+              onClick={handleResend}
+              className="text-[#E63946] text-sm font-semibold hover:underline transition-all"
+            >
               Resend Code
-            </Button>
+            </button>
           ) : (
             <p className="text-sm text-[#64748B]">
               Resend code in <span className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>{timer}s</span>
             </p>
           )}
-        </div>
+        </motion.div>
 
+        {/* Info pill */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+          className="flex items-start gap-3 p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] mb-6"
+        >
+          <div className="p-1.5 rounded-lg bg-[#E63946]/10 mt-0.5">
+            <Shield className="w-4 h-4 text-[#E63946]" />
+          </div>
+          <p className="text-xs text-[#64748B] leading-relaxed">
+            Your verification code is valid for 10 minutes. Please check your {email ? 'email inbox' : 'SMS messages'}.
+          </p>
+        </motion.div>
+
+        {/* Verify Button */}
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             onClick={handleVerify}
-            className="w-full h-12 shadow-lg shadow-[#6366F1]/20"
+            className="w-full h-12 text-white font-semibold rounded-xl"
             size="lg"
             disabled={otp.length !== 6 || isVerifying}
-            style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+            style={{ background: "linear-gradient(135deg, #1D3557, #0A1628)" }}
           >
-            {isVerifying ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Verifying...</> : 'Verify & Continue'}
+            {isVerifying ? (
+              <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Verifying...</>
+            ) : (
+              'Verify & Continue'
+            )}
           </Button>
         </motion.div>
-      </div>
+      </motion.div>
     </div>
   );
 }

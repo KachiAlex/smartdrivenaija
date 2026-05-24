@@ -27,8 +27,8 @@ export function CertificateScreen({ onNavigate }: CertificateScreenProps) {
         transition={{ type: "spring", stiffness: 200 }}
         className="flex justify-center mb-6 pt-8"
       >
-        <div className="p-6 rounded-full bg-[#6366F1]/10">
-          <Award className="w-20 h-20 text-[#6366F1]" />
+        <div className="p-6 rounded-full bg-[#E63946]/10">
+          <Award className="w-20 h-20 text-[#E63946]" />
         </div>
       </motion.div>
 
@@ -52,13 +52,13 @@ export function CertificateScreen({ onNavigate }: CertificateScreenProps) {
         transition={{ delay: 0.3 }}
         className="mb-8"
       >
-        <Card className="p-8 glass-card border-2 border-[#6366F1]/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#6366F1]/5 rounded-full -translate-y-16 translate-x-16" />
+        <Card className="p-8 glass-card border-2 border-[#E63946]/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#E63946]/5 rounded-full -translate-y-16 translate-x-16" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#F59E0B]/10 rounded-full translate-y-12 -translate-x-12" />
 
           <div className="relative">
             <div className="flex justify-center mb-4">
-              <Badge className="bg-[#6366F1] text-white px-4 py-1 border-0">
+              <Badge className="bg-[#E63946] text-white px-4 py-1 border-0">
                 Certificate of Completion
               </Badge>
             </div>
@@ -76,7 +76,7 @@ export function CertificateScreen({ onNavigate }: CertificateScreenProps) {
             </div>
 
             <div className="flex items-center justify-center gap-2 mb-6">
-              <CheckCircle className="w-5 h-5 text-[#6366F1]" />
+              <CheckCircle className="w-5 h-5 text-[#E63946]" />
               <span className="text-sm text-[#64748B]">
                 Completed on May 20, 2026
               </span>
@@ -115,19 +115,19 @@ export function CertificateScreen({ onNavigate }: CertificateScreenProps) {
         className="space-y-3"
       >
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-12 border-[#6366F1]/30 text-[#6366F1]">
+          <Button variant="outline" className="h-12 border-[#E63946]/30 text-[#E63946]">
             <Share2 className="w-5 h-5 mr-2" />
             Share
           </Button>
-          <Button variant="outline" className="h-12 border-[#6366F1]/30 text-[#6366F1]">
+          <Button variant="outline" className="h-12 border-[#E63946]/30 text-[#E63946]">
             <Download className="w-5 h-5 mr-2" />
             Download
           </Button>
         </div>
 
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button onClick={() => onNavigate("home")} className="w-full h-12 shadow-lg shadow-[#6366F1]/20" size="lg"
-            style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+          <Button onClick={() => onNavigate("home")} className="w-full h-12 shadow-lg shadow-[#E63946]/20" size="lg"
+            style={{ background: "linear-gradient(135deg, #1D3557, #0A1628)" }}
           >
             Back to Home
           </Button>

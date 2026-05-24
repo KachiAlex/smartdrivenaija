@@ -39,18 +39,18 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
     <div className="size-full overflow-auto bg-[#FAFBFF] pb-28">
       {/* Cosmic header with mesh blobs */}
       <div className="relative p-6 pb-10 rounded-b-[2.5rem] overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" }}
+        style={{ background: "linear-gradient(135deg, #E63946 0%, #F4A261 40%, #0A1628 100%)" }}
       >
         {/* Animated mesh blobs */}
         <motion.div
           animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#E63946]/30 blur-[80px]"
         />
         <motion.div
           animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/30 blur-[70px]"
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F4A261]/20 blur-[70px]"
         />
 
         <motion.div
@@ -130,8 +130,8 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           >
             <div className="glass-card p-5 rounded-2xl">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#6366F1]/20 to-[#8B5CF6]/10">
-                  <Zap className="w-5 h-5 text-[#6366F1]" />
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#E63946]/20 to-[#F4A261]/10">
+                  <Zap className="w-5 h-5 text-[#E63946]" />
                 </div>
                 <span className="text-sm text-[#64748B] font-medium">Total XP</span>
               </div>
@@ -152,7 +152,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[#0F172A] font-bold">Continue Learning</h3>
-            <Button variant="ghost" size="sm" onClick={() => onNavigate("modules")} className="text-[#6366F1]">
+            <Button variant="ghost" size="sm" onClick={() => onNavigate("modules")} className="text-[#E63946]">
               View All
             </Button>
           </div>
@@ -164,16 +164,16 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               className="perspective-card"
             >
               <Card
-                className="p-5 cursor-pointer glass-card border-[#6366F1]/10 hover:shadow-xl hover:shadow-[#6366F1]/10 transition-all"
+                className="p-5 cursor-pointer glass-card border-[#E63946]/10 hover:shadow-xl hover:shadow-[#E63946]/10 transition-all"
                 onClick={() => onNavigate("lesson", { moduleId: inProgressModuleFull?.id })}
               >
                 <div className="flex items-start gap-4">
                   <motion.div
                     whileHover={{ rotate: [0, -10, 10, -10, 0] }}
                     transition={{ duration: 0.5 }}
-                    className="p-4 rounded-2xl bg-gradient-to-br from-[#6366F1]/20 to-[#8B5CF6]/10"
+                    className="p-4 rounded-2xl bg-gradient-to-br from-[#E63946]/20 to-[#F4A261]/10"
                   >
-                    <BookOpen className="w-8 h-8 text-[#6366F1]" />
+                    <BookOpen className="w-8 h-8 text-[#E63946]" />
                   </motion.div>
                   <div className="flex-1">
                     <Badge className="mb-2 bg-gradient-to-r from-[#F59E0B] to-[#FB923C] text-white font-medium border-0">
@@ -189,10 +189,10 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                           initial={{ width: 0 }}
                           animate={{ width: `${inProgressModule.progressPercent}%` }}
                           transition={{ duration: 0.8, ease: "easeOut" }}
-                          className="h-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-full"
+                          className="h-full bg-gradient-to-r from-[#E63946] to-[#F4A261] rounded-full"
                         />
                       </div>
-                      <span className="text-sm font-semibold text-[#6366F1]">{Math.round(inProgressModule.progressPercent)}%</span>
+                      <span className="text-sm font-semibold text-[#E63946]">{Math.round(inProgressModule.progressPercent)}%</span>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-[#64748B]">
                       <span className="flex items-center gap-1">
@@ -215,10 +215,10 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               whileTap={{ scale: 0.98 }}
               className="perspective-card"
             >
-              <Card className="p-5 cursor-pointer glass-card border-[#6366F1]/10 hover:shadow-xl transition-all" onClick={() => onNavigate("modules")}>
+              <Card className="p-5 cursor-pointer glass-card border-[#E63946]/10 hover:shadow-xl transition-all" onClick={() => onNavigate("modules")}>
                 <div className="flex items-center gap-4">
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#6366F1]/20 to-[#8B5CF6]/10">
-                    <BookOpen className="w-8 h-8 text-[#6366F1]" />
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#E63946]/20 to-[#F4A261]/10">
+                    <BookOpen className="w-8 h-8 text-[#E63946]" />
                   </div>
                   <div>
                     <h4 className="mb-1 font-semibold text-[#0F172A]">Get Started</h4>
@@ -243,14 +243,14 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               whileTap={{ scale: 0.97 }}
               className="perspective-card"
             >
-              <Card className="p-4 cursor-pointer glass-card border-[#6366F1]/10 hover:border-[#6366F1]/30 hover:shadow-xl hover:shadow-[#6366F1]/10 transition-all" onClick={() => onNavigate("mock-test")}>
+              <Card className="p-4 cursor-pointer glass-card border-[#E63946]/10 hover:border-[#E63946]/30 hover:shadow-xl hover:shadow-[#E63946]/10 transition-all" onClick={() => onNavigate("mock-test")}>
                 <div className="flex flex-col items-center text-center gap-3">
                   <motion.div
                     whileHover={{ rotate: [0, 10, -10, 0] }}
                     transition={{ duration: 0.4 }}
-                    className="p-3 rounded-xl bg-gradient-to-br from-[#6366F1]/20 to-[#8B5CF6]/10"
+                    className="p-3 rounded-xl bg-gradient-to-br from-[#E63946]/20 to-[#F4A261]/10"
                   >
-                    <PlayCircle className="w-8 h-8 text-[#6366F1]" />
+                    <PlayCircle className="w-8 h-8 text-[#E63946]" />
                   </motion.div>
                   <div>
                     <h4 className="font-semibold text-[#0F172A]">Mock Test</h4>
@@ -302,7 +302,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                   <p className="text-sm text-[#64748B]">{recentBadge.description}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-[#6366F1] font-semibold">+{recentBadge.xpReward} XP</p>
+                  <p className="text-sm text-[#E63946] font-semibold">+{recentBadge.xpReward} XP</p>
                 </div>
               </div>
             </Card>
