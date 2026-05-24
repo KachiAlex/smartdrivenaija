@@ -24,7 +24,7 @@ export function LeaderboardScreen() {
       case 3:
         return <Award className="w-6 h-6 text-amber-600" />;
       default:
-        return <span className="text-muted-foreground font-heading" style={{ fontWeight: 600 }}>#{rank}</span>;
+        return <span className="text-[#64748B]" style={{ fontWeight: 600, fontFamily: "Poppins" }}>#{rank}</span>;
     }
   };
 
@@ -33,17 +33,30 @@ export function LeaderboardScreen() {
 
   return (
     <div className="size-full flex flex-col bg-[#FAFBFF] pb-28">
-      <div className="relative p-6 pb-6 overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #F59E0B20 0%, #6366F120 100%)" }}
+      <div className="relative p-6 pb-6 rounded-b-[2.5rem] overflow-hidden text-white"
+        style={{ background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #0F172A 100%)" }}
       >
+        {/* Animated mesh blobs */}
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#818CF8]/40 blur-[80px]"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], x: [0, -20, 0], y: [0, 30, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-[#F59E0B]/30 blur-[70px]"
+        />
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="relative z-10"
         >
-          <h1 className="mb-2 text-[#0F172A]" style={{ fontSize: "1.75rem", fontWeight: 700, fontFamily: "Poppins" }}>
+          <h1 className="mb-2 text-white" style={{ fontSize: "1.75rem", fontWeight: 700, fontFamily: "Poppins" }}>
             Leaderboard
           </h1>
-          <p className="text-[#64748B]">
+          <p className="text-white/80">
             Compete with learners across Nigeria
           </p>
         </motion.div>
