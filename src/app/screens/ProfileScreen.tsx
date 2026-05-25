@@ -1,10 +1,11 @@
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Zap,
   Trophy,
@@ -14,19 +15,33 @@ import {
   Globe,
   LogOut,
   ChevronRight,
-  Star
+  Star,
+  Lock,
+  Eye,
+  EyeOff,
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
 import { useTheme } from "../context/ThemeContext";
 import { api } from "../lib/api";
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
 export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) => void }) {
-  const { user, logout } = useAuth();
+  const { user, logout, changePassword } = useAuth();
   const { progress } = useApp();
   const { theme, toggleTheme } = useTheme();
   const [driverScore, setDriverScore] = useState<{ driverScore: number; scoreBreakdown: any } | null>(null);
+
+  // Change password state
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [changingPw, setChangingPw] = useState(false);
 
   useEffect(() => {
     const fetchDriverScore = async () => {
@@ -43,6 +58,23 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
   const handleLogout = async () => {
     await logout();
     onNavigate?.("login");
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPw.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+    if (newPw !== confirmPw) { toast.error('Passwords do not match'); return; }
+    setChangingPw(true);
+    try {
+      await changePassword(currentPw, newPw);
+      toast.success('Password changed successfully');
+      setShowChangePw(false);
+      setCurrentPw(''); setNewPw(''); setConfirmPw('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to change password');
+    } finally {
+      setChangingPw(false);
+    }
   };
 
   const xpTotal = progress?.xpTotal || user?.xpTotal || 0;
@@ -265,6 +297,85 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
               </div>
               <ChevronRight className="w-5 h-5 text-[#64748B]" />
             </div>
+
+            {/* Change Password */}
+            <button
+              type="button"
+              onClick={() => setShowChangePw(v => !v)}
+              className="w-full p-4 flex items-center justify-between hover:bg-[#F8FAFC] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5 text-[#64748B]" />
+                <p className="font-semibold text-[#0F172A]" style={{ fontFamily: "Poppins" }}>Change Password</p>
+              </div>
+              <motion.div animate={{ rotate: showChangePw ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className="w-5 h-5 text-[#64748B]" />
+              </motion.div>
+            </button>
+
+            <AnimatePresence>
+              {showChangePw && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="overflow-hidden"
+                >
+                  <form onSubmit={handleChangePassword} className="px-4 pb-4 pt-1 space-y-3 bg-[#F8FAFC]">
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+                      <Input
+                        type={showPw ? 'text' : 'password'}
+                        placeholder="Current password"
+                        value={currentPw}
+                        onChange={e => setCurrentPw(e.target.value)}
+                        className="pl-10 h-11 border-2 border-[#E2E8F0] bg-white rounded-xl text-sm"
+                        required
+                      />
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+                      <Input
+                        type={showPw ? 'text' : 'password'}
+                        placeholder="New password (min 6 chars)"
+                        value={newPw}
+                        onChange={e => setNewPw(e.target.value)}
+                        className="pl-10 pr-10 h-11 border-2 border-[#E2E8F0] bg-white rounded-xl text-sm"
+                        required
+                      />
+                      <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+                      <Input
+                        type={showPw ? 'text' : 'password'}
+                        placeholder="Confirm new password"
+                        value={confirmPw}
+                        onChange={e => setConfirmPw(e.target.value)}
+                        className={`pl-10 h-11 border-2 bg-white rounded-xl text-sm ${
+                          confirmPw && confirmPw !== newPw ? 'border-red-400' : 'border-[#E2E8F0]'
+                        }`}
+                        required
+                      />
+                    </div>
+                    {confirmPw && confirmPw !== newPw && (
+                      <p className="text-xs text-red-500">Passwords do not match</p>
+                    )}
+                    <Button
+                      type="submit"
+                      className="w-full h-10 text-white text-sm font-semibold rounded-xl"
+                      disabled={changingPw || !currentPw || newPw.length < 6 || newPw !== confirmPw}
+                      style={{ background: 'linear-gradient(135deg, #1D3557, #0A1628)' }}
+                    >
+                      {changingPw ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : 'Save New Password'}
+                    </Button>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Card>
         </motion.div>
 

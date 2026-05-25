@@ -34,7 +34,7 @@ import renewalMarketplaceRoutes from './routes/renewalMarketplace.js';
 import computerVisionRoutes from './routes/computerVision.js';
 import biometricRoutes from './routes/biometric.js';
 import adminRoutes from './routes/admin.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import { errorHandler, requestId } from './middleware/errorHandler.js';
 import pool from './db/pool.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,6 +44,9 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// ── Request ID (must be first) ───────────────────────────────
+app.use(requestId);
 
 // ── Security Middleware ──────────────────────────────────────
 
@@ -73,6 +76,14 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Request timeout (15s)
+app.use((req, res, next) => {
+  res.setTimeout(15000, () => {
+    res.status(503).json({ error: 'Request timeout', requestId: req.id });
+  });
+  next();
+});
+
 // ── Rate Limiting ──────────────────────────────────────────
 
 // Strict rate limiting for auth endpoints
@@ -100,8 +111,13 @@ app.use('/admin', authLimiter);
 app.use(apiLimiter);
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'connected' });
+  } catch {
+    res.status(503).json({ status: 'degraded', timestamp: new Date().toISOString(), db: 'disconnected' });
+  }
 });
 
 // Routes
