@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from '../server/src/routes/auth.js';
+import adminRoutes from '../server/src/routes/admin.js';
 import userRoutes from '../server/src/routes/user.js';
 import modulesRoutes from '../server/src/routes/modules.js';
 import progressRoutes from '../server/src/routes/progress.js';
@@ -24,6 +25,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/admin', adminRoutes);
 app.use('/user', userRoutes);
 app.use('/modules', modulesRoutes);
 app.use('/progress', progressRoutes);

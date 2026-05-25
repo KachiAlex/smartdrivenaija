@@ -6,6 +6,14 @@
     {
       "source": "/api/:path*",
       "destination": "/api/index.mjs"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/admin.html"
     }
   ]
 }
