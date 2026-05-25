@@ -9,8 +9,15 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
+  login: (identifier: string, password: string) => Promise<void>;
   requestOTP: (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => Promise<{ expiresIn: number; sentVia: string[]; _dev_otp?: string }>;
   verifyOTP: (phone: string, code: string, email?: string) => Promise<void>;
+  registerInit: (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => Promise<{ expiresIn: number; sentVia: string[]; _dev_otp?: string }>;
+  registerVerifyOTP: (phone: string, code: string, email?: string) => Promise<{ tempToken: string }>;
+  registerComplete: (tempToken: string, password: string, fullName: string, state?: string) => Promise<void>;
+  requestPasswordReset: (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => Promise<{ expiresIn: number; _dev_otp?: string }>;
+  confirmPasswordReset: (phone: string, code: string, newPassword: string, email?: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
   refreshProfile: () => Promise<void>;
@@ -58,6 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('auth:expired', handleExpired);
   }, []);
 
+  const login = useCallback(async (identifier: string, password: string) => {
+    const result = await api.login(identifier, password);
+    api.setTokens(result.accessToken, result.refreshToken);
+    setState({
+      user: result.user,
+      isAuthenticated: true,
+      isLoading: false,
+      isNewUser: !result.user?.onboardingCompleted,
+    });
+  }, []);
+
   const requestOTP = useCallback(async (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => {
     const result = await api.requestOTP(phone, email, deliveryMethod);
     return { expiresIn: result.expiresIn, sentVia: result.sentVia, _dev_otp: result._dev_otp };
@@ -72,6 +90,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading: false,
       isNewUser: !result.user?.onboardingCompleted,
     });
+  }, []);
+
+  const registerInit = useCallback(async (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => {
+    const result = await api.registerInit(phone, email, deliveryMethod);
+    return { expiresIn: result.expiresIn, sentVia: result.sentVia, _dev_otp: result._dev_otp };
+  }, []);
+
+  const registerVerifyOTP = useCallback(async (phone: string, code: string, email?: string) => {
+    const result = await api.registerVerifyOTP(phone, code, email);
+    return { tempToken: result.tempToken };
+  }, []);
+
+  const registerComplete = useCallback(async (tempToken: string, password: string, fullName: string, state?: string) => {
+    const result = await api.registerComplete(tempToken, password, fullName, state);
+    api.setTokens(result.accessToken, result.refreshToken);
+    setState({
+      user: result.user,
+      isAuthenticated: true,
+      isLoading: false,
+      isNewUser: !result.user?.onboardingCompleted,
+    });
+  }, []);
+
+  const requestPasswordReset = useCallback(async (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => {
+    const result = await api.requestPasswordReset(phone, email, deliveryMethod);
+    return { expiresIn: result.expiresIn, _dev_otp: result._dev_otp };
+  }, []);
+
+  const confirmPasswordReset = useCallback(async (phone: string, code: string, newPassword: string, email?: string) => {
+    await api.confirmPasswordReset(phone, code, newPassword, email);
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    await api.changePassword(currentPassword, newPassword);
   }, []);
 
   const logout = useCallback(async () => {
@@ -96,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, requestOTP, verifyOTP, logout, updateUser, refreshProfile }}>
+    <AuthContext.Provider value={{ ...state, login, requestOTP, verifyOTP, registerInit, registerVerifyOTP, registerComplete, requestPasswordReset, confirmPasswordReset, changePassword, logout, updateUser, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

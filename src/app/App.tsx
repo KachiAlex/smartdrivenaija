@@ -20,6 +20,8 @@ import { LeaderboardScreen } from "./screens/LeaderboardScreen";
 import { WalletScreen } from "./screens/WalletScreen";
 import { EmergencyScreen } from "./screens/EmergencyScreen";
 import { FirstAidScreen } from "./screens/FirstAidScreen";
+import { RegisterScreen } from "./screens/RegisterScreen";
+import { ForgotPasswordScreen } from "./screens/ForgotPasswordScreen";
 import { BottomNav } from "./components/BottomNav";
 import { Toaster } from "./components/ui/sonner";
 
@@ -28,6 +30,8 @@ type Screen =
   | "onboarding"
   | "login"
   | "otp"
+  | "register"
+  | "forgot-password"
   | "language"
   | "home"
   | "modules"
@@ -112,7 +116,25 @@ function AppContent() {
     <div className="min-h-[100dvh] min-h-screen w-full bg-background relative">
       {currentScreen === "splash" && <SplashScreen onComplete={handleSplashComplete} />}
       {currentScreen === "onboarding" && <OnboardingScreen onComplete={() => setCurrentScreen("login")} />}
-      {currentScreen === "login" && <LoginScreen onLogin={handleLoginSuccess} />}
+      {currentScreen === "login" && (
+        <LoginScreen
+          onLogin={handleLoginSuccess}
+          onForgotPassword={() => setCurrentScreen("forgot-password")}
+          onRegister={() => setCurrentScreen("register")}
+        />
+      )}
+      {currentScreen === "register" && (
+        <RegisterScreen
+          onComplete={handleOTPVerified}
+          onBack={() => setCurrentScreen("login")}
+        />
+      )}
+      {currentScreen === "forgot-password" && (
+        <ForgotPasswordScreen
+          onComplete={() => setCurrentScreen("login")}
+          onBack={() => setCurrentScreen("login")}
+        />
+      )}
       {currentScreen === "otp" && (
         <OTPScreen
           phoneNumber={phoneNumber}
