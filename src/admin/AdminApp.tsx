@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'motion/react';
 import { api, type AdminUser, type Stats, type User, type Pagination } from './api';
 import { ContentTab } from './ContentTab';
 import { SettingsTab } from './SettingsTab';
@@ -17,13 +18,17 @@ function useToast() {
 // ── Stat card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon, color }: { label: string; value: number | string; icon: string; color: string }) {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${color}`}>{icon}</div>
+    <motion.div
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="bg-white rounded-2xl p-5 shadow-sm border border-[#E63946]/10 glass-card flex items-center gap-4"
+    >
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br ${color} text-white shadow-lg`}>{icon}</div>
       <div>
         <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-        <p className="text-2xl font-bold text-gray-800 leading-tight">{value}</p>
+        <p className="text-2xl font-bold text-[#0F172A] leading-tight">{value}</p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -302,7 +307,7 @@ export function AdminApp() {
 
   // ── Dashboard layout ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-[#FAFBFF] flex flex-col">
       {/* Global toasts */}
       <div className="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
         {toast.toasts.map(t => (
@@ -312,7 +317,7 @@ export function AdminApp() {
 
       {/* Sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-56 bg-[#0A1628] flex flex-col py-6 px-4 gap-1 shrink-0">
+        <aside className="w-56 flex flex-col py-6 px-4 gap-1 shrink-0 overflow-hidden" style={{ background: 'linear-gradient(180deg, #0A1628 0%, #1D3557 100%)' }}>
           <div className="flex items-center gap-2 px-3 mb-6">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#E63946] to-[#F4A261] flex items-center justify-center text-white text-base">🚗</div>
             <span className="text-white font-bold text-sm">SmartDrive</span>
@@ -324,14 +329,25 @@ export function AdminApp() {
             { id: 'content',   label: 'Content',   icon: '📚' },
             { id: 'settings',  label: 'Settings',  icon: '⚙️' },
           ].map(item => (
-            <button
+            <motion.button
               key={item.id}
               onClick={() => setTab(item.id as any)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors w-full text-left
-                ${tab === item.id ? 'bg-white/15 text-white' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left relative overflow-hidden
+                ${tab === item.id ? 'text-white' : 'text-white/50 hover:text-white'}`}
             >
-              <span>{item.icon}</span> {item.label}
-            </button>
+              {tab === item.id && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-white/15 rounded-xl"
+                  initial={false}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">{item.icon}</span>
+              <span className="relative z-10">{item.label}</span>
+            </motion.button>
           ))}
 
           <div className="mt-auto pt-4 border-t border-white/10">
@@ -339,9 +355,14 @@ export function AdminApp() {
               <p className="text-xs text-white/40 truncate">{admin.email}</p>
               <p className="text-xs text-white/70 font-semibold">{admin.fullName || 'Admin'}</p>
             </div>
-            <button onClick={logout} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/50 hover:text-white hover:bg-white/10 transition-colors w-full">
+            <motion.button
+              onClick={logout}
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/50 hover:text-white transition-colors w-full"
+            >
               <span>🚪</span> Sign out
-            </button>
+            </motion.button>
           </div>
         </aside>
 
@@ -351,39 +372,61 @@ export function AdminApp() {
           {/* ── Dashboard tab ── */}
           {tab === 'dashboard' && (
             <div className="p-8 space-y-6 max-w-5xl">
-              <div className="flex items-center justify-between">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between"
+              >
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+                  <h1 className="text-2xl font-bold text-[#0F172A]">Dashboard</h1>
                   <p className="text-gray-500 text-sm mt-0.5">Welcome back, {admin.fullName || admin.email}</p>
                 </div>
-                <button onClick={fetchStats} disabled={loadingStats} className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors">
+                <motion.button
+                  onClick={fetchStats}
+                  disabled={loadingStats}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+                >
                   {loadingStats ? '⟳ Loading…' : '⟳ Refresh'}
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
 
               {loadingStats && !stats ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-gray-200 rounded-2xl animate-pulse" />)}
+                  {[...Array(4)].map((_, i) => (
+                    <motion.div key={i} className="h-24 bg-gray-200 rounded-2xl animate-pulse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }} />
+                  ))}
                 </div>
               ) : stats ? (
                 <>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard label="Total Users" value={stats.totalUsers} icon="👥" color="bg-blue-50" />
-                    <StatCard label="Premium" value={stats.premiumUsers} icon="⭐" color="bg-yellow-50" />
-                    <StatCard label="New Today" value={stats.newToday} icon="🆕" color="bg-green-50" />
-                    <StatCard label="OTP Today" value={stats.otpRequestsToday} icon="🔐" color="bg-purple-50" />
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                  >
+                    <StatCard label="Total Users" value={stats.totalUsers} icon="👥" color="from-blue-500 to-blue-600" />
+                    <StatCard label="Premium" value={stats.premiumUsers} icon="⭐" color="from-[#F59E0B] to-[#F59E0B]" />
+                    <StatCard label="New Today" value={stats.newToday} icon="🆕" color="from-green-500 to-green-600" />
+                    <StatCard label="OTP Today" value={stats.otpRequestsToday} icon="🔐" color="from-purple-500 to-purple-600" />
+                  </motion.div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
                     {/* Signups chart */}
-                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">Signups — Last 7 Days</p>
+                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#E63946]/10 glass-card">
+                      <p className="text-sm font-semibold text-[#0F172A] mb-3">Signups — Last 7 Days</p>
                       <MiniBarChart data={stats.signupsLast7Days} />
                     </div>
 
                     {/* Role breakdown */}
-                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">Users by Role</p>
+                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#E63946]/10 glass-card">
+                      <p className="text-sm font-semibold text-[#0F172A] mb-3">Users by Role</p>
                       <div className="space-y-2">
                         {stats.roleBreakdown.filter(r => r.role !== 'admin').map(r => {
                           const pct = stats.totalUsers ? Math.round((parseInt(r.count) / stats.totalUsers) * 100) : 0;
@@ -401,16 +444,21 @@ export function AdminApp() {
                         })}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
 
                   {/* Active sessions */}
-                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl">🔑</div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-white rounded-2xl p-5 shadow-sm border border-[#E63946]/10 glass-card flex items-center gap-4"
+                  >
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#E63946] to-[#F4A261] rounded-xl flex items-center justify-center text-2xl">🔑</div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Active Sessions</p>
-                      <p className="text-2xl font-bold text-gray-800">{stats.activeRefreshTokens}</p>
+                      <p className="text-2xl font-bold text-[#0F172A]">{stats.activeRefreshTokens}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 </>
               ) : (
                 <p className="text-gray-400 text-sm">Failed to load stats</p>
@@ -420,9 +468,13 @@ export function AdminApp() {
 
           {/* ── Users tab ── */}
           {tab === 'users' && (
-            <div className="p-8 space-y-4 max-w-6xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-8 space-y-4 max-w-6xl"
+            >
               <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-800">Users</h1>
+                <h1 className="text-2xl font-bold text-[#0F172A]">Users</h1>
                 <span className="text-sm text-gray-400">{pagination?.total ?? '—'} total</span>
               </div>
 
@@ -452,7 +504,7 @@ export function AdminApp() {
               </div>
 
               {/* Table */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm border border-[#E63946]/10 glass-card overflow-hidden">
                 {loadingUsers ? (
                   <div className="p-12 text-center text-gray-400 text-sm">Loading…</div>
                 ) : users.length === 0 ? (
@@ -461,7 +513,7 @@ export function AdminApp() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-gray-100 bg-gray-50">
+                        <tr className="border-b border-gray-100 bg-gray-50/50">
                           <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">User</th>
                           <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Role</th>
                           <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">XP</th>
@@ -472,7 +524,12 @@ export function AdminApp() {
                       </thead>
                       <tbody>
                         {users.map(u => (
-                          <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                          <motion.tr
+                            key={u.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="border-b border-gray-50 hover:bg-[#F8FAFC] transition-colors"
+                          >
                             <td className="px-5 py-3.5">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#E63946] to-[#F4A261] flex items-center justify-center text-white text-xs font-bold shrink-0">
@@ -501,7 +558,7 @@ export function AdminApp() {
                                 View →
                               </button>
                             </td>
-                          </tr>
+                          </motion.tr>
                         ))}
                       </tbody>
                     </table>

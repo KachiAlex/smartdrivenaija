@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'motion/react';
 import { api, type Module, type Question, type Pagination } from './api';
 
 // ── Difficulty badge ──────────────────────────────────────────────────────────
@@ -369,7 +370,11 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
   };
 
   return (
-    <div className="p-8 space-y-5 max-w-6xl">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-8 space-y-5 max-w-6xl"
+    >
       {/* Modals */}
       {moduleModal.open && (
         <ModuleModal token={token} initial={moduleModal.initial} onClose={() => setModuleModal({ open: false, initial: null })}
@@ -386,8 +391,12 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Content Management</h1>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <h1 className="text-2xl font-bold text-[#0F172A]">Content Management</h1>
         <div className="flex gap-2">
           {view === 'modules' && (
             <button onClick={() => setModuleModal({ open: true, initial: null })} className="h-9 px-4 bg-[#1D3557] text-white text-sm rounded-xl font-semibold hover:bg-[#0A1628]">
@@ -405,7 +414,7 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
             </>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Sub-nav */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
@@ -420,11 +429,20 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
 
       {/* ── Modules view ── */}
       {view === 'modules' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+        >
           {loading ? [...Array(6)].map((_, i) => <div key={i} className="h-32 bg-gray-100 rounded-2xl animate-pulse" />) :
             modules.length === 0 ? <p className="text-gray-400 text-sm col-span-3">No modules yet. Create one above.</p> :
             modules.map(m => (
-              <div key={m.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
+              <motion.div
+                key={m.id}
+                whileHover={{ y: -4 }}
+                className="bg-white rounded-2xl border border-[#E63946]/10 glass-card shadow-sm p-5 space-y-3"
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{m.icon}</span>
@@ -454,15 +472,20 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
                 >
                   View questions →
                 </button>
-              </div>
+              </motion.div>
             ))
           }
-        </div>
+        </motion.div>
       )}
 
       {/* ── Questions view ── */}
       {view === 'questions' && (
-        <div className="space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-4"
+        >
           {/* Filters */}
           <div className="flex gap-3 flex-wrap">
             <input type="search" placeholder="Search questions…" value={search}
@@ -482,13 +505,13 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#E63946]/10 glass-card shadow-sm overflow-hidden">
             {loading ? <div className="p-12 text-center text-gray-400 text-sm">Loading…</div> :
               questions.length === 0 ? <div className="p-12 text-center text-gray-400 text-sm">No questions found. Create one or import via JSON.</div> : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-100 bg-gray-50">
+                      <tr className="border-b border-gray-100 bg-gray-50/50">
                         <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Question</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Module</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Diff</th>
@@ -498,7 +521,7 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
                     </thead>
                     <tbody>
                       {questions.map(q => (
-                        <tr key={q.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                        <tr key={q.id} className="border-b border-gray-50 hover:bg-[#F8FAFC] transition-colors">
                           <td className="px-5 py-3.5 max-w-xs">
                             <p className="text-gray-800 text-xs font-medium truncate">{q.question_en}</p>
                             <p className="text-gray-400 text-xs mt-0.5">{q.topic_tag} · {q.options_en?.length ?? 0} options</p>
@@ -533,8 +556,8 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

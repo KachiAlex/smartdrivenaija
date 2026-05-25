@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'motion/react';
 import { api } from './api';
 
 // ── Password strength bar ─────────────────────────────────────────────────────
@@ -45,7 +46,11 @@ function ChangePasswordCard({ token, toast }: { token: string; toast: { ok: (m: 
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-2xl border border-[#E63946]/10 glass-card shadow-sm p-6 space-y-5"
+    >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-[#1D3557]/10 flex items-center justify-center text-[#1D3557] text-lg">🔑</div>
         <div>
@@ -110,14 +115,19 @@ function ChangePasswordCard({ token, toast }: { token: string; toast: { ok: (m: 
           {saving ? 'Saving…' : 'Update Password'}
         </button>
       </form>
-    </div>
+    </motion.div>
   );
 }
 
 // ── Admin Info Card ───────────────────────────────────────────────────────────
 function AdminInfoCard({ token }: { token: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="bg-white rounded-2xl border border-[#E63946]/10 glass-card shadow-sm p-6 space-y-4"
+    >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-lg">🛡️</div>
         <div>
@@ -149,7 +159,7 @@ function AdminInfoCard({ token }: { token: string }) {
           <span className="text-xs text-gray-400 font-mono">/api/admin</span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -177,7 +187,12 @@ function DangerZoneCard({ token, onLogout, toast }: {
   };
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-red-100 shadow-sm p-6 space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="bg-white rounded-2xl border-2 border-red-100 shadow-sm p-6 space-y-4"
+    >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-lg">⚠️</div>
         <div>
@@ -214,7 +229,7 @@ function DangerZoneCard({ token, onLogout, toast }: {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -229,11 +244,15 @@ export function SettingsTab({
   onLogout: () => void;
 }) {
   return (
-    <div className="p-8 max-w-2xl space-y-5">
-      <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-8 max-w-2xl space-y-5"
+    >
+      <h1 className="text-2xl font-bold text-[#0F172A]">Settings</h1>
       <ChangePasswordCard token={token} toast={toast} />
       <AdminInfoCard token={token} />
       <DangerZoneCard token={token} onLogout={onLogout} toast={toast} />
-    </div>
+    </motion.div>
   );
 }
