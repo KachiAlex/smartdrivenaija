@@ -82,9 +82,9 @@ router.post('/setup', async (req, res, next) => {
 router.get('/stats', ...adminAuth, async (req, res, next) => {
   try {
     const [users, premiumUsers, newToday, otpCodes, activeTokens] = await Promise.all([
-      pool.query(`SELECT COUNT(*) FROM users WHERE role != 'admin'`),
+      pool.query(`SELECT COUNT(*) FROM users WHERE role NOT IN ('admin', 'school_admin', 'frsc_admin')`),
       pool.query(`SELECT COUNT(*) FROM users WHERE is_premium = true`),
-      pool.query(`SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '24 hours' AND role != 'admin'`),
+      pool.query(`SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '24 hours' AND role NOT IN ('admin', 'school_admin', 'frsc_admin')`),
       pool.query(`SELECT COUNT(*) FROM otp_codes WHERE created_at >= NOW() - INTERVAL '24 hours'`),
       pool.query(`SELECT COUNT(*) FROM refresh_tokens WHERE revoked = false AND expires_at > NOW()`),
     ]);
@@ -96,7 +96,7 @@ router.get('/stats', ...adminAuth, async (req, res, next) => {
     const signupsLast7Days = await pool.query(`
       SELECT DATE(created_at) as date, COUNT(*) as count
       FROM users
-      WHERE created_at >= NOW() - INTERVAL '7 days' AND role != 'admin'
+      WHERE created_at >= NOW() - INTERVAL '7 days' AND role NOT IN ('admin', 'school_admin', 'frsc_admin')
       GROUP BY DATE(created_at)
       ORDER BY date ASC
     `);
