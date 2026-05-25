@@ -407,20 +407,26 @@ router.post('/login/otp-verify', validate('otpVerify'), async (req, res, next) =
 router.post('/password-reset/request', validate('otpRequest'), async (req, res, next) => {
   try {
     const { phone, email, deliveryMethod = 'sms' } = req.body;
-    const identifier = email || phone;
+    const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
+    const identifier = cleanPhone || email;
 
-    if (!identifier) return res.status(400).json({ error: 'Phone or email required' });
-
+    // Look up user by phone OR email
     const userResult = await pool.query(
-      `SELECT id FROM users WHERE ${email ? 'email = $1' : 'phone = $1'}`,
-      [identifier]
+      `SELECT id, phone, email FROM users WHERE phone = $1 OR email = $2`,
+      [cleanPhone || null, email || null]
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Account not found' });
+      return res.status(404).json({ error: 'No account found with those details' });
     }
 
-    const otpResult = await sendOTP(identifier, phone, email, deliveryMethod);
+    // Use the stored phone/email from the user record for sending
+    const storedUser = userResult.rows[0];
+    const otpIdentifier = identifier;
+    const otpPhone = storedUser.phone || cleanPhone;
+    const otpEmail = storedUser.email || email;
+
+    const otpResult = await sendOTP(otpIdentifier, otpPhone, otpEmail, deliveryMethod);
 
     res.json({
       message: otpResult.sentVia.length > 0 ? 'Reset code sent' : 'Code generated (check logs)',
@@ -434,27 +440,25 @@ router.post('/password-reset/request', validate('otpRequest'), async (req, res, 
 router.post('/password-reset/confirm', validate('passwordReset'), async (req, res, next) => {
   try {
     const { phone, email, code, newPassword } = req.body;
-    const identifier = email || phone;
+    const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
+    const identifier = cleanPhone || email;
 
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
-
+    // Find OTP — stored under phone OR email as the identifier
     const otpResult = await pool.query(
-      `SELECT id, code, attempts FROM otp_codes 
+      `SELECT id, code, attempts FROM otp_codes
        WHERE phone = $1 AND verified = false AND expires_at > NOW()
        ORDER BY created_at DESC LIMIT 1`,
       [identifier]
     );
 
     if (otpResult.rows.length === 0) {
-      return res.status(400).json({ error: 'No valid code. Please request a new one.' });
+      return res.status(400).json({ error: 'No valid code. Please request a new one.', code: 'OTP_EXPIRED' });
     }
 
     const otpRecord = otpResult.rows[0];
     if (otpRecord.attempts >= 5) {
       await pool.query(`UPDATE otp_codes SET verified = true WHERE id = $1`, [otpRecord.id]);
-      return res.status(429).json({ error: 'Too many attempts. Request new code.' });
+      return res.status(429).json({ error: 'Too many attempts. Request a new code.', code: 'TOO_MANY_ATTEMPTS' });
     }
 
     await pool.query(`UPDATE otp_codes SET attempts = attempts + 1 WHERE id = $1`, [otpRecord.id]);
@@ -465,15 +469,23 @@ router.post('/password-reset/confirm', validate('passwordReset'), async (req, re
 
     await pool.query(`UPDATE otp_codes SET verified = true WHERE id = $1`, [otpRecord.id]);
 
-    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-
-    await pool.query(
-      `UPDATE users SET password_hash = $1, password_set_at = NOW() WHERE ${isEmail ? 'email = $2' : 'phone = $2'}`,
-      [passwordHash, identifier]
+    // Find the user by phone OR email
+    const userResult = await pool.query(
+      `SELECT id FROM users WHERE phone = $1 OR email = $2`,
+      [cleanPhone || null, email || null]
     );
 
-    res.json({ message: 'Password reset successful. Please login with your new password.' });
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await pool.query(
+      `UPDATE users SET password_hash = $1, password_set_at = NOW() WHERE id = $2`,
+      [passwordHash, userResult.rows[0].id]
+    );
+
+    res.json({ message: 'Password reset successful. Please sign in with your new password.' });
   } catch (err) { next(err); }
 });
 
