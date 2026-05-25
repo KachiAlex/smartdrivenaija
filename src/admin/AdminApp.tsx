@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api, type AdminUser, type Stats, type User, type Pagination } from './api';
+import { ContentTab } from './ContentTab';
 
 // ── Tiny toast ────────────────────────────────────────────────────────────────
 function useToast() {
@@ -200,7 +201,7 @@ export function AdminApp() {
     return s ? JSON.parse(s) : null;
   });
 
-  const [tab, setTab] = useState<'dashboard' | 'users'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'users' | 'content'>('dashboard');
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -319,6 +320,7 @@ export function AdminApp() {
           {[
             { id: 'dashboard', label: 'Dashboard', icon: '📊' },
             { id: 'users',     label: 'Users',     icon: '👥' },
+            { id: 'content',   label: 'Content',   icon: '📚' },
           ].map(item => (
             <button
               key={item.id}
@@ -527,6 +529,8 @@ export function AdminApp() {
               </div>
             </div>
           )}
+          {/* ── Content tab ── */}
+          {tab === 'content' && <ContentTab token={token} toast={toast} />}
         </main>
       </div>
 

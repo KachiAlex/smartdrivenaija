@@ -45,6 +45,37 @@ export interface Stats {
   signupsLast7Days: { date: string; count: string }[];
 }
 
+export interface Module {
+  id: number;
+  slug: string;
+  title_en: string;
+  description_en: string | null;
+  icon: string;
+  sort_order: number;
+  is_free: boolean;
+  is_premium: boolean;
+  estimated_minutes: number;
+  xp_reward: number;
+  lesson_count?: number;
+  question_count?: number;
+}
+
+export interface Question {
+  id: number;
+  module_id: number;
+  module_title?: string;
+  lesson_id: number | null;
+  topic_tag: string;
+  question_type: string;
+  question_en: string;
+  options_en: string[];
+  correct_answer: number;
+  explanation_en: string | null;
+  difficulty: number;
+  is_mock_test_eligible: boolean;
+  created_at: string;
+}
+
 export interface Pagination {
   page: number;
   limit: number;
@@ -86,4 +117,38 @@ export const api = {
 
   revokeSessions: (token: string, id: string) =>
     req<{ message: string; count: number }>(`${BASE}/users/${id}/sessions`, { method: 'DELETE', headers: headers(token) }),
+
+  // ── Content ──────────────────────────────────────────────────────────────
+  getModules: (token: string) =>
+    req<Module[]>(`${BASE}/content/modules`, { headers: headers(token) }),
+
+  createModule: (token: string, body: Partial<Module>) =>
+    req<Module>(`${BASE}/content/modules`, { method: 'POST', headers: headers(token), body: JSON.stringify(body) }),
+
+  updateModule: (token: string, id: number, body: Partial<Module>) =>
+    req<Module>(`${BASE}/content/modules/${id}`, { method: 'PATCH', headers: headers(token), body: JSON.stringify(body) }),
+
+  deleteModule: (token: string, id: number) =>
+    req<{ message: string }>(`${BASE}/content/modules/${id}`, { method: 'DELETE', headers: headers(token) }),
+
+  getQuestions: (token: string, params: { module_id?: number; page?: number; search?: string; mock_only?: boolean } = {}) => {
+    const q = new URLSearchParams();
+    if (params.module_id) q.set('module_id', String(params.module_id));
+    if (params.page) q.set('page', String(params.page));
+    if (params.search) q.set('search', params.search);
+    if (params.mock_only) q.set('mock_only', 'true');
+    return req<{ questions: Question[]; pagination: Pagination }>(`${BASE}/content/questions?${q}`, { headers: headers(token) });
+  },
+
+  createQuestion: (token: string, body: Partial<Question>) =>
+    req<Question>(`${BASE}/content/questions`, { method: 'POST', headers: headers(token), body: JSON.stringify(body) }),
+
+  updateQuestion: (token: string, id: number, body: Partial<Question>) =>
+    req<Question>(`${BASE}/content/questions/${id}`, { method: 'PATCH', headers: headers(token), body: JSON.stringify(body) }),
+
+  deleteQuestion: (token: string, id: number) =>
+    req<{ message: string }>(`${BASE}/content/questions/${id}`, { method: 'DELETE', headers: headers(token) }),
+
+  bulkImportQuestions: (token: string, questions: Partial<Question>[]) =>
+    req<{ message: string; inserted: number }>(`${BASE}/content/questions/bulk`, { method: 'POST', headers: headers(token), body: JSON.stringify({ questions }) }),
 };

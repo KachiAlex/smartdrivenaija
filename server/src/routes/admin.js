@@ -270,4 +270,221 @@ router.post('/reset-database', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ============================================================================
+// CONTENT MANAGEMENT — MODULES
+// ============================================================================
+
+// GET /admin/content/modules
+router.get('/content/modules', ...adminAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(`
+      SELECT m.id, m.slug, m.title_en, m.description_en, m.icon, m.sort_order,
+             m.is_free, m.is_premium, m.estimated_minutes, m.xp_reward,
+             (SELECT COUNT(*) FROM lessons WHERE module_id = m.id) as lesson_count,
+             (SELECT COUNT(*) FROM questions WHERE module_id = m.id) as question_count
+      FROM modules m ORDER BY m.sort_order
+    `);
+    res.json(result.rows);
+  } catch (err) { next(err); }
+});
+
+// POST /admin/content/modules
+router.post('/content/modules', ...adminAuth, async (req, res, next) => {
+  try {
+    const { slug, title_en, description_en, icon, sort_order, is_free, is_premium, estimated_minutes, xp_reward } = req.body;
+    if (!slug || !title_en || !icon) return res.status(400).json({ error: 'slug, title_en, and icon are required' });
+    const result = await pool.query(
+      `INSERT INTO modules (slug, title_en, description_en, icon, sort_order, is_free, is_premium, estimated_minutes, xp_reward)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [slug, title_en, description_en || null, icon, sort_order || 0, is_free || false, is_premium || false, estimated_minutes || 60, xp_reward || 500]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) { next(err); }
+});
+
+// PATCH /admin/content/modules/:id
+router.patch('/content/modules/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const { title_en, description_en, icon, sort_order, is_free, is_premium, estimated_minutes, xp_reward } = req.body;
+    const result = await pool.query(
+      `UPDATE modules SET
+        title_en = COALESCE($1, title_en),
+        description_en = COALESCE($2, description_en),
+        icon = COALESCE($3, icon),
+        sort_order = COALESCE($4, sort_order),
+        is_free = COALESCE($5, is_free),
+        is_premium = COALESCE($6, is_premium),
+        estimated_minutes = COALESCE($7, estimated_minutes),
+        xp_reward = COALESCE($8, xp_reward)
+       WHERE id = $9 RETURNING *`,
+      [title_en, description_en, icon, sort_order, is_free, is_premium, estimated_minutes, xp_reward, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Module not found' });
+    res.json(result.rows[0]);
+  } catch (err) { next(err); }
+});
+
+// DELETE /admin/content/modules/:id
+router.delete('/content/modules/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(`DELETE FROM modules WHERE id = $1 RETURNING id`, [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Module not found' });
+    res.json({ message: 'Module deleted' });
+  } catch (err) { next(err); }
+});
+
+// ============================================================================
+// CONTENT MANAGEMENT — QUESTIONS
+// ============================================================================
+
+// GET /admin/content/questions?module_id=&page=&search=
+router.get('/content/questions', ...adminAuth, async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 25);
+    const offset = (page - 1) * limit;
+    const moduleId = req.query.module_id ? parseInt(req.query.module_id) : null;
+    const search = req.query.search?.trim() || '';
+    const mockOnly = req.query.mock_only === 'true';
+
+    const params = [];
+    const conditions = [];
+    if (moduleId) { params.push(moduleId); conditions.push(`q.module_id = $${params.length}`); }
+    if (search) { params.push(`%${search}%`); conditions.push(`q.question_en ILIKE $${params.length}`); }
+    if (mockOnly) conditions.push(`q.is_mock_test_eligible = true`);
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const total = parseInt((await pool.query(`SELECT COUNT(*) FROM questions q ${where}`, params)).rows[0].count);
+    params.push(limit, offset);
+    const result = await pool.query(`
+      SELECT q.id, q.module_id, q.lesson_id, q.topic_tag, q.question_type,
+             q.question_en, q.options_en, q.correct_answer, q.explanation_en,
+             q.difficulty, q.is_mock_test_eligible, q.created_at,
+             m.title_en as module_title
+      FROM questions q
+      LEFT JOIN modules m ON m.id = q.module_id
+      ${where}
+      ORDER BY q.created_at DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}
+    `, params);
+
+    res.json({ questions: result.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
+  } catch (err) { next(err); }
+});
+
+// POST /admin/content/questions
+router.post('/content/questions', ...adminAuth, async (req, res, next) => {
+  try {
+    const {
+      module_id, lesson_id, topic_tag, question_type,
+      question_en, options_en, correct_answer, explanation_en,
+      difficulty, is_mock_test_eligible
+    } = req.body;
+
+    if (!module_id || !question_en || !options_en || correct_answer === undefined || !topic_tag) {
+      return res.status(400).json({ error: 'module_id, topic_tag, question_en, options_en, and correct_answer are required' });
+    }
+    if (!Array.isArray(options_en) || options_en.length < 2) {
+      return res.status(400).json({ error: 'options_en must be an array with at least 2 items' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO questions
+        (module_id, lesson_id, topic_tag, question_type, question_en, options_en,
+         correct_answer, explanation_en, difficulty, is_mock_test_eligible)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [
+        module_id, lesson_id || null, topic_tag,
+        question_type || 'multiple_choice',
+        question_en, JSON.stringify(options_en),
+        correct_answer, explanation_en || null,
+        difficulty || 1, is_mock_test_eligible !== false
+      ]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) { next(err); }
+});
+
+// PATCH /admin/content/questions/:id
+router.patch('/content/questions/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const {
+      module_id, lesson_id, topic_tag, question_type,
+      question_en, options_en, correct_answer, explanation_en,
+      difficulty, is_mock_test_eligible
+    } = req.body;
+
+    const result = await pool.query(
+      `UPDATE questions SET
+        module_id = COALESCE($1, module_id),
+        lesson_id = COALESCE($2, lesson_id),
+        topic_tag = COALESCE($3, topic_tag),
+        question_type = COALESCE($4, question_type),
+        question_en = COALESCE($5, question_en),
+        options_en = COALESCE($6, options_en),
+        correct_answer = COALESCE($7, correct_answer),
+        explanation_en = COALESCE($8, explanation_en),
+        difficulty = COALESCE($9, difficulty),
+        is_mock_test_eligible = COALESCE($10, is_mock_test_eligible)
+       WHERE id = $11 RETURNING *`,
+      [
+        module_id || null, lesson_id || null, topic_tag || null, question_type || null,
+        question_en || null, options_en ? JSON.stringify(options_en) : null,
+        correct_answer !== undefined ? correct_answer : null,
+        explanation_en || null, difficulty || null,
+        is_mock_test_eligible !== undefined ? is_mock_test_eligible : null,
+        req.params.id
+      ]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Question not found' });
+    res.json(result.rows[0]);
+  } catch (err) { next(err); }
+});
+
+// DELETE /admin/content/questions/:id
+router.delete('/content/questions/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(`DELETE FROM questions WHERE id = $1 RETURNING id`, [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Question not found' });
+    res.json({ message: 'Question deleted' });
+  } catch (err) { next(err); }
+});
+
+// POST /admin/content/questions/bulk  — import array of questions
+router.post('/content/questions/bulk', ...adminAuth, async (req, res, next) => {
+  try {
+    const { questions } = req.body;
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ error: 'questions array required' });
+    }
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      let inserted = 0;
+      for (const q of questions) {
+        if (!q.module_id || !q.question_en || !q.options_en || q.correct_answer === undefined || !q.topic_tag) continue;
+        await client.query(
+          `INSERT INTO questions
+            (module_id, lesson_id, topic_tag, question_type, question_en, options_en,
+             correct_answer, explanation_en, difficulty, is_mock_test_eligible)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+          [
+            q.module_id, q.lesson_id || null, q.topic_tag,
+            q.question_type || 'multiple_choice',
+            q.question_en, JSON.stringify(q.options_en),
+            q.correct_answer, q.explanation_en || null,
+            q.difficulty || 1, q.is_mock_test_eligible !== false
+          ]
+        );
+        inserted++;
+      }
+      await client.query('COMMIT');
+      res.status(201).json({ message: `${inserted} question(s) imported`, inserted });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally { client.release(); }
+  } catch (err) { next(err); }
+});
+
 export default router;
