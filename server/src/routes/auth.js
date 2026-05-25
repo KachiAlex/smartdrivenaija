@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import { Resend } from 'resend';
 import pool from '../db/pool.js';
-import { validate, schemas } from '../middleware/validation.js';
+import { validate } from '../middleware/validation.js';
 
 const router = Router();
 const BCRYPT_ROUNDS = 12;
@@ -92,7 +92,7 @@ async function sendOTP(identifier, phone, email, deliveryMethod) {
 // ============================================================================
 
 // Step 1: Init registration - send OTP
-router.post('/register/init', validate(schemas.otpRequest), async (req, res, next) => {
+router.post('/register/init', validate('otpRequest'), async (req, res, next) => {
   try {
     const { phone, email, deliveryMethod = 'sms' } = req.body;
     const identifier = email || phone;
@@ -127,7 +127,7 @@ router.post('/register/init', validate(schemas.otpRequest), async (req, res, nex
 });
 
 // Step 2: Verify OTP - return temp token to complete registration
-router.post('/register/verify-otp', validate(schemas.otpVerify), async (req, res, next) => {
+router.post('/register/verify-otp', validate('otpVerify'), async (req, res, next) => {
   try {
     const { phone, email, code } = req.body;
     const identifier = email || phone;
@@ -172,7 +172,7 @@ router.post('/register/verify-otp', validate(schemas.otpVerify), async (req, res
 });
 
 // Step 3: Complete registration - set password and profile
-router.post('/register/complete', validate(schemas.registerComplete), async (req, res, next) => {
+router.post('/register/complete', validate('registerComplete'), async (req, res, next) => {
   try {
     const { tempToken, password, fullName, state } = req.body;
 
@@ -236,7 +236,7 @@ router.post('/register/complete', validate(schemas.registerComplete), async (req
 // ============================================================================
 
 // Standard login with email/phone + password
-router.post('/login', validate(schemas.login), async (req, res, next) => {
+router.post('/login', validate('login'), async (req, res, next) => {
   try {
     const { identifier, password, deviceFingerprint, deviceName } = req.body;
 
@@ -308,7 +308,7 @@ router.post('/login', validate(schemas.login), async (req, res, next) => {
 });
 
 // OTP-based login (for passwordless users or fallback)
-router.post('/login/otp-request', validate(schemas.otpRequest), async (req, res, next) => {
+router.post('/login/otp-request', validate('otpRequest'), async (req, res, next) => {
   try {
     const { phone, email, deliveryMethod = 'sms' } = req.body;
     const identifier = email || phone;
@@ -335,7 +335,7 @@ router.post('/login/otp-request', validate(schemas.otpRequest), async (req, res,
   } catch (err) { next(err); }
 });
 
-router.post('/login/otp-verify', validate(schemas.otpVerify), async (req, res, next) => {
+router.post('/login/otp-verify', validate('otpVerify'), async (req, res, next) => {
   try {
     const { phone, email, code, deviceFingerprint, deviceName } = req.body;
     const identifier = email || phone;
@@ -413,7 +413,7 @@ router.post('/login/otp-verify', validate(schemas.otpVerify), async (req, res, n
 // PASSWORD RESET FLOW
 // ============================================================================
 
-router.post('/password-reset/request', validate(schemas.otpRequest), async (req, res, next) => {
+router.post('/password-reset/request', validate('otpRequest'), async (req, res, next) => {
   try {
     const { phone, email, deliveryMethod = 'sms' } = req.body;
     const identifier = email || phone;
@@ -440,7 +440,7 @@ router.post('/password-reset/request', validate(schemas.otpRequest), async (req,
   } catch (err) { next(err); }
 });
 
-router.post('/password-reset/confirm', validate(schemas.passwordReset), async (req, res, next) => {
+router.post('/password-reset/confirm', validate('passwordReset'), async (req, res, next) => {
   try {
     const { phone, email, code, newPassword } = req.body;
     const identifier = email || phone;
@@ -492,7 +492,7 @@ router.post('/password-reset/confirm', validate(schemas.passwordReset), async (r
 
 import { authenticate } from '../middleware/auth.js';
 
-router.post('/change-password', authenticate, validate(schemas.changePassword), async (req, res, next) => {
+router.post('/change-password', authenticate, validate('changePassword'), async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.id;

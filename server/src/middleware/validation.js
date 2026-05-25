@@ -1,64 +1,71 @@
-import { z } from 'zod';
+// Plain JS validation — no external dependencies (safe for all deployment targets)
 
-// Common validators
-export const schemas = {
-  // Auth
-  login: z.object({
-    identifier: z.string().min(3, 'Identifier required'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-  }),
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^\+[1-9]\d{6,14}$/;
 
-  otpRequest: z.object({
-    phone: z.string().min(10, 'Valid phone number required').optional(),
-    email: z.string().email('Valid email required').optional(),
-    deliveryMethod: z.enum(['sms', 'email', 'both']).default('sms'),
-  }).refine(data => data.phone || data.email, {
-    message: 'Phone or email required',
-  }),
+function err(field, message) { return { field, message }; }
 
-  otpVerify: z.object({
-    phone: z.string().min(10).optional(),
-    email: z.string().email().optional(),
-    code: z.string().length(6, 'OTP must be 6 digits'),
-  }).refine(data => data.phone || data.email, {
-    message: 'Phone or email required',
-  }),
+function runValidators(body, validators) {
+  const issues = [];
+  for (const v of validators) {
+    const result = v(body);
+    if (result) issues.push(result);
+  }
+  return issues;
+}
 
-  registerComplete: z.object({
-    tempToken: z.string().min(1, 'Temp token required'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-    fullName: z.string().min(2, 'Full name required'),
-    state: z.string().optional(),
-  }),
+// ── Schema definitions (plain validator arrays) ──────────────────────────────
 
-  passwordReset: z.object({
-    phone: z.string().min(10).optional(),
-    email: z.string().email().optional(),
-    code: z.string().length(6, 'OTP must be 6 digits'),
-    newPassword: z.string().min(6, 'Password must be at least 6 characters'),
-  }).refine(data => data.phone || data.email, {
-    message: 'Phone or email required',
-  }),
+const schemas = {
+  login: [
+    b => (!b.identifier || String(b.identifier).trim().length < 3) && err('identifier', 'Identifier required'),
+    b => (!b.password || String(b.password).length < 6) && err('password', 'Password must be at least 6 characters'),
+  ],
 
-  changePassword: z.object({
-    currentPassword: z.string().min(1, 'Current password required'),
-    newPassword: z.string().min(6, 'New password must be at least 6 characters'),
-  }),
+  otpRequest: [
+    b => (!b.phone && !b.email) && err('phone', 'Phone or email required'),
+    b => (b.email && !EMAIL_RE.test(b.email)) && err('email', 'Valid email required'),
+    b => (b.phone && !PHONE_RE.test(String(b.phone).replace(/\s/g, ''))) && err('phone', 'Valid phone number required (e.g. +2348012345678)'),
+    b => (b.deliveryMethod && !['sms', 'email', 'both'].includes(b.deliveryMethod)) && err('deliveryMethod', 'Must be sms, email, or both'),
+  ],
+
+  otpVerify: [
+    b => (!b.phone && !b.email) && err('phone', 'Phone or email required'),
+    b => (!b.code || String(b.code).length !== 6 || !/^\d{6}$/.test(b.code)) && err('code', 'OTP must be 6 digits'),
+  ],
+
+  registerComplete: [
+    b => (!b.tempToken || String(b.tempToken).length < 10) && err('tempToken', 'Temp token required'),
+    b => (!b.password || String(b.password).length < 6) && err('password', 'Password must be at least 6 characters'),
+    b => (!b.fullName || String(b.fullName).trim().length < 2) && err('fullName', 'Full name required'),
+  ],
+
+  passwordReset: [
+    b => (!b.phone && !b.email) && err('phone', 'Phone or email required'),
+    b => (!b.code || String(b.code).length !== 6 || !/^\d{6}$/.test(b.code)) && err('code', 'OTP must be 6 digits'),
+    b => (!b.newPassword || String(b.newPassword).length < 6) && err('newPassword', 'Password must be at least 6 characters'),
+  ],
+
+  changePassword: [
+    b => (!b.currentPassword || String(b.currentPassword).length < 1) && err('currentPassword', 'Current password required'),
+    b => (!b.newPassword || String(b.newPassword).length < 6) && err('newPassword', 'New password must be at least 6 characters'),
+  ],
 };
 
-export function validate(schema) {
+export { schemas };
+
+// ── Middleware factory ────────────────────────────────────────────────────────
+
+export function validate(schemaKey) {
+  const validators = typeof schemaKey === 'string' ? schemas[schemaKey] : schemaKey;
   return (req, res, next) => {
-    const result = schema.safeParse(req.body);
-    if (!result.success) {
+    const issues = runValidators(req.body, validators).filter(Boolean);
+    if (issues.length > 0) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: result.error.issues.map(i => ({
-          field: i.path.join('.'),
-          message: i.message,
-        })),
+        details: issues,
       });
     }
-    req.validated = result.data;
     next();
   };
 }
