@@ -16,6 +16,7 @@ import { MockTestScreen } from "./screens/MockTestScreen";
 import { ResultsScreen } from "./screens/ResultsScreen";
 import { CertificateScreen } from "./screens/CertificateScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
 import { LeaderboardScreen } from "./screens/LeaderboardScreen";
 import { WalletScreen } from "./screens/WalletScreen";
 import { EmergencyScreen } from "./screens/EmergencyScreen";
@@ -41,6 +42,7 @@ type Screen =
   | "results"
   | "certificate"
   | "profile"
+  | "settings"
   | "leaderboard"
   | "wallet"
   | "emergency"
@@ -86,7 +88,7 @@ function AppContent() {
     if (data?.lessonId) setSelectedLessonId(data.lessonId);
     setCurrentScreen(screen as Screen);
 
-    if (["home", "modules", "mock-test", "leaderboard", "profile"].includes(screen)) {
+    if (["home", "modules", "mock-test", "leaderboard", "settings"].includes(screen)) {
       setActiveTab(screen === "mock-test" ? "mock-test" : screen);
     }
   };
@@ -110,7 +112,7 @@ function AppContent() {
     }
   };
 
-  const showBottomNav = ["home", "modules", "wallet", "mock-test", "leaderboard", "profile"].includes(currentScreen);
+  const showBottomNav = ["home", "modules", "wallet", "mock-test", "leaderboard", "settings", "profile"].includes(currentScreen);
 
   return (
     <div className="min-h-[100dvh] min-h-screen w-full bg-background relative">
@@ -159,6 +161,7 @@ function AppContent() {
       {currentScreen === "results" && <ResultsScreen onNavigate={navigate} />}
       {currentScreen === "certificate" && <CertificateScreen onNavigate={navigate} />}
       {currentScreen === "profile" && <ProfileScreen onNavigate={navigate} />}
+      {currentScreen === "settings" && <SettingsScreen onNavigate={navigate} />}
       {currentScreen === "leaderboard" && <LeaderboardScreen />}
 
       {showBottomNav && <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />}

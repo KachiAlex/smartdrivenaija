@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api, type AdminUser, type Stats, type User, type Pagination } from './api';
 import { ContentTab } from './ContentTab';
+import { SettingsTab } from './SettingsTab';
 
 // ── Tiny toast ────────────────────────────────────────────────────────────────
 function useToast() {
@@ -201,7 +202,7 @@ export function AdminApp() {
     return s ? JSON.parse(s) : null;
   });
 
-  const [tab, setTab] = useState<'dashboard' | 'users' | 'content'>('dashboard');
+  const [tab, setTab] = useState<'dashboard' | 'users' | 'content' | 'settings'>('dashboard');
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -321,6 +322,7 @@ export function AdminApp() {
             { id: 'dashboard', label: 'Dashboard', icon: '📊' },
             { id: 'users',     label: 'Users',     icon: '👥' },
             { id: 'content',   label: 'Content',   icon: '📚' },
+            { id: 'settings',  label: 'Settings',  icon: '⚙️' },
           ].map(item => (
             <button
               key={item.id}
@@ -531,6 +533,20 @@ export function AdminApp() {
           )}
           {/* ── Content tab ── */}
           {tab === 'content' && <ContentTab token={token} toast={toast} />}
+
+          {/* ── Settings tab ── */}
+          {tab === 'settings' && (
+            <SettingsTab
+              token={token}
+              toast={toast}
+              onLogout={() => {
+                sessionStorage.removeItem('admin_token');
+                sessionStorage.removeItem('admin_user');
+                setToken('');
+                setAdmin(null);
+              }}
+            />
+          )}
         </main>
       </div>
 

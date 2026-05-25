@@ -94,6 +94,19 @@ export const api = {
   stats: (token: string) =>
     req<Stats>(`${BASE}/stats`, { headers: headers(token) }),
 
+  changePassword: (token: string, currentPassword: string, newPassword: string) =>
+    req<{ message: string }>(`${BASE.replace('/admin', '')}/auth/change-password`, {
+      method: 'POST',
+      headers: headers(token),
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
+  resetDatabase: (token: string) =>
+    req<{ message: string }>(`${BASE}/reset-database`, {
+      method: 'POST',
+      headers: headers(token),
+    }),
+
   users: (token: string, params: { page?: number; search?: string; role?: string } = {}) => {
     const q = new URLSearchParams();
     if (params.page) q.set('page', String(params.page));

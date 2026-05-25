@@ -445,6 +445,19 @@ class ApiClient {
     return this.request<{ offences: Offence[]; pagination: { page: number; limit: number; total: number; pages: number } }>(`/offences${queryString ? `?${queryString}` : ''}`);
   }
 
+  // ── Biometric ─────────────────────────────────────────────
+  async getBiometricCredentials(): Promise<{ credentials: BiometricCredential[] }> {
+    return this.request<{ credentials: BiometricCredential[] }>('/biometric/credentials');
+  }
+
+  async deleteBiometricCredential(credentialId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/biometric/credentials/${credentialId}`, { method: 'DELETE' });
+  }
+
+  async deactivateBiometricCredential(credentialId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/biometric/credentials/${credentialId}/deactivate`, { method: 'PATCH' });
+  }
+
   // ── Driver Score ───────────────────────────────────────────
   async getDriverScore(): Promise<{
     driverScore: number;
@@ -826,6 +839,16 @@ export interface LegalGuidance {
   legal_rights: string[];
   next_steps: string[];
   resources: string[];
+}
+
+export interface BiometricCredential {
+  credentialId: string;
+  deviceName: string | null;
+  deviceType: string | null;
+  biometricType: string | null;
+  isActive: boolean;
+  createdAt: string;
+  lastUsedAt: string | null;
 }
 
 export interface Hazard {

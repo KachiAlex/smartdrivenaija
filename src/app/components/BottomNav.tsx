@@ -1,4 +1,4 @@
-import { Home, BookOpen, Trophy, Award, User, Wallet } from "lucide-react";
+import { Home, BookOpen, Trophy, Award, Settings, Wallet } from "lucide-react";
 import { motion } from "motion/react";
 
 interface BottomNavProps {
@@ -12,7 +12,7 @@ const navItems = [
   { id: "wallet", label: "Wallet", icon: Wallet },
   { id: "mock-test", label: "Mock Test", icon: Award },
   { id: "leaderboard", label: "Leaderboard", icon: Trophy },
-  { id: "profile", label: "Profile", icon: User },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {

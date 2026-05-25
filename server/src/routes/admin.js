@@ -238,11 +238,10 @@ router.delete('/users/:id', ...adminAuth, async (req, res, next) => {
 
 // ── Legacy: POST /admin/reset-database ───────────────────────────────────────
 
-router.post('/reset-database', async (req, res, next) => {
+router.post('/reset-database', ...adminAuth, async (req, res, next) => {
   try {
-    const adminSecret = req.headers['x-admin-secret'];
-    if (adminSecret !== process.env.ADMIN_SECRET) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    if (req.admin?.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
     }
     const client = await pool.connect();
     try {
