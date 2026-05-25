@@ -29,6 +29,12 @@ const schemas = {
     b => (b.deliveryMethod && !['sms', 'email', 'both'].includes(b.deliveryMethod)) && err('deliveryMethod', 'Must be sms, email, or both'),
   ],
 
+  registerInit: [
+    b => (!b.phone || String(b.phone).length < 8) && err('phone', 'Phone number required'),
+    b => (b.phone && !PHONE_RE.test(String(b.phone).replace(/\s/g, ''))) && err('phone', 'Valid phone number required (e.g. +2348012345678)'),
+    b => (!b.email || !EMAIL_RE.test(b.email)) && err('email', 'Valid email address required'),
+  ],
+
   otpVerify: [
     b => (!b.phone && !b.email) && err('phone', 'Phone or email required'),
     b => (!b.code || String(b.code).length !== 6 || !/^\d{6}$/.test(b.code)) && err('code', 'OTP must be 6 digits'),

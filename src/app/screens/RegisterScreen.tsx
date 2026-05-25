@@ -54,13 +54,13 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
 
   // Validation helpers
   const phoneValid = () => /^\+[1-9]\d{6,14}$/.test(fullPhone());
-  const emailValid = () => !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const emailValid = () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const sendOTP = async () => {
     setIsSubmitting(true);
     try {
       const phone = fullPhone();
-      const result = await registerInit(phone, email.trim() || undefined, 'sms');
+      const result = await registerInit(phone, email.trim(), 'sms');
       if (result._dev_otp) toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
       setStep('verify');
     } catch (err: any) {
@@ -76,6 +76,7 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
     if (!surname.trim()) { toast.error('Enter your surname'); return; }
     if (!phoneLocal) { toast.error('Enter your phone number'); return; }
     if (!phoneValid()) { toast.error('Enter a valid phone number'); return; }
+    if (!email.trim()) { toast.error('Enter your email address'); return; }
     if (!emailValid()) { toast.error('Enter a valid email address'); return; }
     await sendOTP();
   };
@@ -239,11 +240,9 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
                 <p className="text-xs text-[#94A3B8]">Full number: <span className="font-semibold text-[#64748B]">{fullPhone()}</span></p>
               </div>
 
-              {/* Email (optional) */}
+              {/* Email (required) */}
               <div className="space-y-1.5">
-                <Label htmlFor="reg-email" className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                  Email <span className="normal-case font-normal text-[#94A3B8]">(optional)</span>
-                </Label>
+                <Label htmlFor="reg-email" className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Email Address</Label>
                 <Input
                   id="reg-email"
                   type="email"
@@ -252,6 +251,7 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
                   onChange={e => setEmail(e.target.value)}
                   className={`pl-4 ${inputCls}`}
                   autoComplete="email"
+                  required
                 />
               </div>
 
@@ -259,7 +259,7 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
                 <Button
                   type="submit"
                   className="w-full h-12 text-white font-semibold rounded-xl"
-                  disabled={isSubmitting || !firstName || !surname || !phoneLocal}
+                  disabled={isSubmitting || !firstName || !surname || !phoneLocal || !email}
                   style={{ background: "linear-gradient(135deg, #1D3557, #0A1628)" }}
                 >
                   {isSubmitting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Sending code...</> : 'Send Verification Code →'}

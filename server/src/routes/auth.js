@@ -92,30 +92,21 @@ async function sendOTP(identifier, phone, email, deliveryMethod) {
 // ============================================================================
 
 // Step 1: Init registration - send OTP
-router.post('/register/init', validate('otpRequest'), async (req, res, next) => {
+router.post('/register/init', validate('registerInit'), async (req, res, next) => {
   try {
     const { phone, email, deliveryMethod = 'sms' } = req.body;
-    const identifier = email || phone;
-
-    if (!identifier) return res.status(400).json({ error: 'Phone or email required' });
-
     const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
-    if (phone && !/^\+234\d{10}$/.test(cleanPhone)) {
-      return res.status(400).json({ error: 'Valid Nigerian phone required (+234XXXXXXXXXX)' });
-    }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ error: 'Valid email required' });
-    }
 
+    // Check for existing account by phone OR email
     const existing = await pool.query(
-      `SELECT id FROM users WHERE ${email ? 'email = $1' : 'phone = $1'}`,
-      [identifier]
+      `SELECT id FROM users WHERE phone = $1 OR email = $2`,
+      [cleanPhone, email]
     );
     if (existing.rows.length > 0) {
-      return res.status(409).json({ error: 'Account already exists. Please login instead.' });
+      return res.status(409).json({ error: 'Account already exists with this phone or email. Please login instead.' });
     }
 
-    const otpResult = await sendOTP(identifier, cleanPhone, email, deliveryMethod);
+    const otpResult = await sendOTP(cleanPhone, cleanPhone, email, deliveryMethod);
 
     res.json({
       message: otpResult.sentVia.length > 0 ? 'OTP sent' : 'OTP generated (check logs)',
@@ -158,7 +149,7 @@ router.post('/register/verify-otp', validate('otpVerify'), async (req, res, next
     await pool.query(`UPDATE otp_codes SET verified = true WHERE id = $1`, [otpRecord.id]);
 
     const tempToken = jwt.sign(
-      { identifier, type: 'registration', iat: Date.now() },
+      { phone: phone || null, email: email || null, type: 'registration', iat: Date.now() },
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
@@ -191,15 +182,15 @@ router.post('/register/complete', validate('registerComplete'), async (req, res,
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    const identifier = payload.identifier;
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    const { phone: payloadPhone, email: payloadEmail } = payload;
+    const identifier = payloadPhone || payloadEmail;
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     const result = await pool.query(
-      `INSERT INTO users (${isEmail ? 'email' : 'phone'}, password_hash, full_name, state, password_set_at)
-       VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
-      [identifier, passwordHash, fullName, state]
+      `INSERT INTO users (phone, email, password_hash, full_name, state, password_set_at)
+       VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
+      [payloadPhone || null, payloadEmail || null, passwordHash, fullName, state]
     );
 
     const user = result.rows[0];
