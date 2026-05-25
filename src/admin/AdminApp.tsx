@@ -586,7 +586,7 @@ export function AdminApp() {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
           {/* ── Content tab ── */}
           {tab === 'content' && <ContentTab token={token} toast={toast} />}
