@@ -41,10 +41,14 @@ export function ForgotPasswordScreen({ onComplete, onBack }: ForgotPasswordScree
     if (channel === 'email' && !email) { toast.error('Enter your email address'); return; }
     setIsSubmitting(true);
     try {
-      const cleanPhone = channel === 'sms' ? normalizePhone(phone) : '';
-      const result = await requestPasswordReset(cleanPhone || '', channel === 'email' ? email : undefined, channel);
+      const cleanPhone = channel === 'sms' ? normalizePhone(phone) : undefined;
+      const result = await requestPasswordReset(
+        cleanPhone || '',
+        channel === 'email' ? email : undefined,
+        channel
+      );
       if (result._dev_otp) toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
-      setPhone(cleanPhone);
+      if (cleanPhone) setPhone(cleanPhone);
       setStep('verify');
     } catch (err: any) {
       toast.error(err.message || 'Failed to send reset code');
@@ -69,7 +73,7 @@ export function ForgotPasswordScreen({ onComplete, onBack }: ForgotPasswordScree
         channel === 'sms' ? phone : '',
         otp,
         newPassword,
-        channel === 'email' ? email : undefined
+        email || undefined
       );
       toast.success('Password reset! Please sign in with your new password.');
       onComplete();
