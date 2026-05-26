@@ -4,7 +4,8 @@
   "installCommand": "npm install",
   "functions": {
     "api/index.mjs": {
-      "includedFiles": ["server/**"]
+      "includedFiles": ["server/**"],
+      "includeDependencies": true
     }
   },
   "rewrites": [
