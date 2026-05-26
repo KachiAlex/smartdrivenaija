@@ -2,12 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "functions": {
-    "api/index.mjs": {
-      "runtime": "nodejs20.x",
-      "includedFiles": ["server/**"]
-    }
-  },
   "rewrites": [
     {
       "source": "/api/:path*",
