@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const pool = require('../db');
+import { Router } from 'express';
+import pool from '../db/pool.js';
+
+const router = Router();
 
 // Get user's rewards
 router.get('/my-rewards', async (req, res) => {
@@ -292,4 +293,4 @@ router.get('/premium-status', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

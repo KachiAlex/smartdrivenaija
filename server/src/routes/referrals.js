@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const pool = require('../db');
+import { Router } from 'express';
+import pool from '../db/pool.js';
+
+const router = Router();
 
 // Get user's referral code and stats
 router.get('/my-referral', async (req, res) => {
@@ -164,4 +165,4 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

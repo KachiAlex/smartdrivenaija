@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const pool = require('../db');
+import { Router } from 'express';
+import pool from '../db/pool.js';
+
+const router = Router();
 
 // Get all reminders for a user
 router.get('/', async (req, res) => {
@@ -138,4 +139,4 @@ router.post('/check-expiry', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
