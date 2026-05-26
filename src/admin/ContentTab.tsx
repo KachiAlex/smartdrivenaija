@@ -295,21 +295,37 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
       const questions = jsonData.map((row: any, index: number) => {
         let options: string[] = [];
         if (row.options) {
+          // Comma-separated format
           options = String(row.options).split(',').map((o: string) => o.trim()).filter(Boolean);
-        } else if (row.option_a) {
+        } else if (row['Option A'] || row['Option B']) {
+          // Simple spaced-column format: Option A, Option B, Option C, Option D
+          options = [row['Option A'], row['Option B'], row['Option C'], row['Option D']].filter(Boolean);
+        } else if (row.option_a || row.option_b) {
+          // Underscore format
           options = [row.option_a, row.option_b, row.option_c, row.option_d].filter(Boolean);
         }
         if (options.length < 2) {
-          throw new Error(`Row ${index + 2}: At least 2 options required`);
+          throw new Error(`Row ${index + 2}: At least 2 options required. Found columns: ${Object.keys(row).join(', ')}`);
         }
-        const correctAnswer = parseInt(String(row.correct_answer), 10);
+        // Support "Answer" or "correct_answer" column
+        let correctAnswer: number;
+        if (row.Answer !== undefined) {
+          const ans = String(row.Answer).trim().toUpperCase();
+          if (ans.length === 1 && ans >= 'A' && ans <= 'D') {
+            correctAnswer = ans.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+          } else {
+            correctAnswer = parseInt(ans, 10);
+          }
+        } else {
+          correctAnswer = parseInt(String(row.correct_answer), 10);
+        }
         if (isNaN(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) {
-          throw new Error(`Row ${index + 2}: correct_answer must be 0-${options.length - 1}`);
+          throw new Error(`Row ${index + 2}: Answer must be A, B, C, D or 0-${options.length - 1}`);
         }
         return {
           module_id: row.module_id ? parseInt(String(row.module_id), 10) : (modules[0]?.id ?? 1),
           topic_tag: String(row.topic_tag || 'general'),
-          question_en: String(row.question || row.question_en || ''),
+          question_en: String(row.question || row.question_en || row.Question || ''),
           options_en: options,
           correct_answer: correctAnswer,
           explanation_en: String(row.explanation || row.explanation_en || ''),
@@ -328,33 +344,56 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
     }
   };
 
-  const downloadSampleExcel = () => {
-    const sampleData = [{
-      module_id: modules[0]?.id ?? 1,
-      topic_tag: 'road_signs',
-      question: 'What does a red octagonal sign mean?',
-      options: 'Stop,Slow down,Give way,No entry',
-      correct_answer: 0,
-      explanation: 'A red octagonal sign always means STOP.',
-      difficulty: 1,
-      is_mock_test_eligible: 1,
-      question_type: 'multiple_choice',
-    }, {
-      module_id: modules[0]?.id ?? 1,
-      topic_tag: 'speed_limits',
-      question: 'What is the speed limit in a residential area?',
-      options: '30 km/h,50 km/h,60 km/h,80 km/h',
-      correct_answer: 1,
-      explanation: 'Standard speed limit in residential areas is 50 km/h.',
-      difficulty: 2,
-      is_mock_test_eligible: 1,
-      question_type: 'multiple_choice',
-    }];
-    const worksheet = XLSX.utils.json_to_sheet(sampleData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
-    worksheet['!cols'] = [{ wch: 10 }, { wch: 15 }, { wch: 50 }, { wch: 40 }, { wch: 15 }, { wch: 50 }, { wch: 10 }, { wch: 20 }, { wch: 15 }];
-    XLSX.writeFile(workbook, 'questions_template.xlsx');
+  const downloadSampleExcel = (simpleFormat: boolean = false) => {
+    if (simpleFormat) {
+      const sampleData = [{
+        Question: 'What does a red octagonal sign mean?',
+        'Option A': 'Stop',
+        'Option B': 'Slow down',
+        'Option C': 'Give way',
+        'Option D': 'No entry',
+        Answer: 'A',
+      }, {
+        Question: 'What is the speed limit in a residential area?',
+        'Option A': '30 km/h',
+        'Option B': '50 km/h',
+        'Option C': '60 km/h',
+        'Option D': '80 km/h',
+        Answer: 'B',
+      }];
+      const worksheet = XLSX.utils.json_to_sheet(sampleData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+      worksheet['!cols'] = [{ wch: 50 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 10 }];
+      XLSX.writeFile(workbook, 'questions_simple_template.xlsx');
+    } else {
+      const sampleData = [{
+        module_id: modules[0]?.id ?? 1,
+        topic_tag: 'road_signs',
+        question: 'What does a red octagonal sign mean?',
+        options: 'Stop,Slow down,Give way,No entry',
+        correct_answer: 0,
+        explanation: 'A red octagonal sign always means STOP.',
+        difficulty: 1,
+        is_mock_test_eligible: 1,
+        question_type: 'multiple_choice',
+      }, {
+        module_id: modules[0]?.id ?? 1,
+        topic_tag: 'speed_limits',
+        question: 'What is the speed limit in a residential area?',
+        options: '30 km/h,50 km/h,60 km/h,80 km/h',
+        correct_answer: 1,
+        explanation: 'Standard speed limit in residential areas is 50 km/h.',
+        difficulty: 2,
+        is_mock_test_eligible: 1,
+        question_type: 'multiple_choice',
+      }];
+      const worksheet = XLSX.utils.json_to_sheet(sampleData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+      worksheet['!cols'] = [{ wch: 10 }, { wch: 15 }, { wch: 50 }, { wch: 40 }, { wch: 15 }, { wch: 50 }, { wch: 10 }, { wch: 20 }, { wch: 15 }];
+      XLSX.writeFile(workbook, 'questions_template.xlsx');
+    }
   };
 
   const example = JSON.stringify([{
@@ -388,20 +427,33 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                   <h3 className="font-semibold text-blue-800">Excel Import Format</h3>
                 </div>
-                <p className="text-sm text-blue-700">
-                  Required columns: <code className="bg-blue-100 px-1 py-0.5 rounded">question</code>,
-                  <code className="bg-blue-100 px-1 py-0.5 rounded">options</code> (comma-separated),
-                  <code className="bg-blue-100 px-1 py-0.5 rounded">correct_answer</code> (0-based index).
-                  Optional: <code className="bg-blue-100 px-1 py-0.5 rounded">module_id</code>,
-                  <code className="bg-blue-100 px-1 py-0.5 rounded">topic_tag</code>,
-                  <code className="bg-blue-100 px-1 py-0.5 rounded">explanation</code>,
-                  <code className="bg-blue-100 px-1 py-0.5 rounded">difficulty</code> (1-3),
-                  <code className="bg-blue-100 px-1 py-0.5 rounded">is_mock_test_eligible</code> (0/1).
-                </p>
-                <button onClick={downloadSampleExcel} className="flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                  Download Sample Template
-                </button>
+                <div className="text-sm text-blue-700 space-y-2">
+                  <p><strong>Simple format:</strong> <code className="bg-blue-100 px-1 py-0.5 rounded">Question</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">Option A</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">Option B</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">Option C</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">Option D</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">Answer</code> (A, B, C, or D).
+                  </p>
+                  <p><strong>Advanced format:</strong> <code className="bg-blue-100 px-1 py-0.5 rounded">question</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">options</code> (comma-separated),
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">correct_answer</code> (0-based index).
+                    Optional: <code className="bg-blue-100 px-1 py-0.5 rounded">module_id</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">topic_tag</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">explanation</code>,
+                    <code className="bg-blue-100 px-1 py-0.5 rounded">difficulty</code> (1-3).
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => downloadSampleExcel(true)} className="flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1.5 rounded-lg transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Simple Template
+                  </button>
+                  <button onClick={() => downloadSampleExcel(false)} className="flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1.5 rounded-lg transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Advanced Template
+                  </button>
+                </div>
               </div>
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#E63946] transition-colors">
                 <input type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelUpload} disabled={saving} className="hidden" id="excel-upload" />
