@@ -15,6 +15,11 @@ const adminAuth = [authenticate, requireRole('admin')];
 
 router.post('/login', async (req, res, next) => {
   try {
+    // Validate required environment variables
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'Server configuration error: JWT_SECRET not set' });
+    }
+
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
@@ -43,7 +48,10 @@ router.post('/login', async (req, res, next) => {
       token,
       user: { id: user.id, email: user.email, fullName: user.full_name, role: user.role },
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error('Admin login error:', err);
+    next(err);
+  }
 });
 
 // ── POST /admin/setup ─────────────────────────────────────────────────────────
