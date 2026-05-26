@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { api, type Module, type Question, type Pagination } from './api';
+import * as XLSX from 'xlsx';
 
 // ── Difficulty badge ──────────────────────────────────────────────────────────
 function DiffBadge({ d }: { d: number }) {
@@ -254,12 +255,13 @@ function ModuleModal({ token, initial, onClose, onSaved }: { token: string; init
   );
 }
 
-// ── Bulk JSON import modal ────────────────────────────────────────────────────
+// ── Bulk import modal (Excel + JSON) ──────────────────────────────────────────
 function BulkImportModal({ token, modules, onClose, onImported }: { token: string; modules: Module[]; onClose: () => void; onImported: () => void }) {
   const [json, setJson] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState('');
+  const [importMode, setImportMode] = useState<'json' | 'excel'>('excel');
 
   const handleImport = async () => {
     setError(''); setResult('');
@@ -273,6 +275,86 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
       onImported();
     } catch (e: any) { setError(e.message); }
     finally { setSaving(false); }
+  };
+
+  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError('');
+    setSaving(true);
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      if (!Array.isArray(jsonData) || jsonData.length === 0) {
+        setError('Excel file is empty or has invalid format');
+        setSaving(false);
+        return;
+      }
+      const questions = jsonData.map((row: any, index: number) => {
+        let options: string[] = [];
+        if (row.options) {
+          options = String(row.options).split(',').map((o: string) => o.trim()).filter(Boolean);
+        } else if (row.option_a) {
+          options = [row.option_a, row.option_b, row.option_c, row.option_d].filter(Boolean);
+        }
+        if (options.length < 2) {
+          throw new Error(`Row ${index + 2}: At least 2 options required`);
+        }
+        const correctAnswer = parseInt(String(row.correct_answer), 10);
+        if (isNaN(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) {
+          throw new Error(`Row ${index + 2}: correct_answer must be 0-${options.length - 1}`);
+        }
+        return {
+          module_id: row.module_id ? parseInt(String(row.module_id), 10) : (modules[0]?.id ?? 1),
+          topic_tag: String(row.topic_tag || 'general'),
+          question_en: String(row.question || row.question_en || ''),
+          options_en: options,
+          correct_answer: correctAnswer,
+          explanation_en: String(row.explanation || row.explanation_en || ''),
+          difficulty: parseInt(String(row.difficulty), 10) || 1,
+          is_mock_test_eligible: row.is_mock_test_eligible === true || row.is_mock_test_eligible === 'true' || row.is_mock_test_eligible === 1,
+          question_type: String(row.question_type || 'multiple_choice'),
+        };
+      });
+      const r = await api.bulkImportQuestions(token, questions);
+      setResult(`${r.message} (${questions.length} questions)`);
+      onImported();
+    } catch (e: any) {
+      setError(e.message || 'Failed to parse Excel file');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const downloadSampleExcel = () => {
+    const sampleData = [{
+      module_id: modules[0]?.id ?? 1,
+      topic_tag: 'road_signs',
+      question: 'What does a red octagonal sign mean?',
+      options: 'Stop,Slow down,Give way,No entry',
+      correct_answer: 0,
+      explanation: 'A red octagonal sign always means STOP.',
+      difficulty: 1,
+      is_mock_test_eligible: 1,
+      question_type: 'multiple_choice',
+    }, {
+      module_id: modules[0]?.id ?? 1,
+      topic_tag: 'speed_limits',
+      question: 'What is the speed limit in a residential area?',
+      options: '30 km/h,50 km/h,60 km/h,80 km/h',
+      correct_answer: 1,
+      explanation: 'Standard speed limit in residential areas is 50 km/h.',
+      difficulty: 2,
+      is_mock_test_eligible: 1,
+      question_type: 'multiple_choice',
+    }];
+    const worksheet = XLSX.utils.json_to_sheet(sampleData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+    worksheet['!cols'] = [{ wch: 10 }, { wch: 15 }, { wch: 50 }, { wch: 40 }, { wch: 15 }, { wch: 50 }, { wch: 10 }, { wch: 20 }, { wch: 15 }];
+    XLSX.writeFile(workbook, 'questions_template.xlsx');
   };
 
   const example = JSON.stringify([{
@@ -290,27 +372,63 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
-          <h2 className="text-base font-bold text-gray-800">Bulk Import Questions (JSON)</h2>
+          <h2 className="text-base font-bold text-gray-800">Bulk Import Questions</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
         </div>
         <div className="p-6 space-y-4 overflow-y-auto flex-1">
-          <p className="text-xs text-gray-500">Paste a JSON array of question objects. Example:</p>
-          <pre className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 overflow-x-auto border border-gray-200">{example}</pre>
-          <textarea
-            value={json}
-            onChange={e => setJson(e.target.value)}
-            rows={10}
-            placeholder="Paste JSON array here…"
-            className="w-full border-2 border-gray-200 rounded-xl p-3 text-xs font-mono focus:border-[#E63946] outline-none resize-y"
-          />
+          <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+            <button onClick={() => setImportMode('excel')} className={`flex-1 py-2 px-3 rounded-md text-sm font-semibold transition-colors ${importMode === 'excel' ? 'bg-white text-[#E63946] shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}>Excel Upload</button>
+            <button onClick={() => setImportMode('json')} className={`flex-1 py-2 px-3 rounded-md text-sm font-semibold transition-colors ${importMode === 'json' ? 'bg-white text-[#E63946] shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}>JSON Paste</button>
+          </div>
+
+          {importMode === 'excel' ? (
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  <h3 className="font-semibold text-blue-800">Excel Import Format</h3>
+                </div>
+                <p className="text-sm text-blue-700">
+                  Required columns: <code className="bg-blue-100 px-1 py-0.5 rounded">question</code>,
+                  <code className="bg-blue-100 px-1 py-0.5 rounded">options</code> (comma-separated),
+                  <code className="bg-blue-100 px-1 py-0.5 rounded">correct_answer</code> (0-based index).
+                  Optional: <code className="bg-blue-100 px-1 py-0.5 rounded">module_id</code>,
+                  <code className="bg-blue-100 px-1 py-0.5 rounded">topic_tag</code>,
+                  <code className="bg-blue-100 px-1 py-0.5 rounded">explanation</code>,
+                  <code className="bg-blue-100 px-1 py-0.5 rounded">difficulty</code> (1-3),
+                  <code className="bg-blue-100 px-1 py-0.5 rounded">is_mock_test_eligible</code> (0/1).
+                </p>
+                <button onClick={downloadSampleExcel} className="flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  Download Sample Template
+                </button>
+              </div>
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#E63946] transition-colors">
+                <input type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelUpload} disabled={saving} className="hidden" id="excel-upload" />
+                <label htmlFor="excel-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                  <span className="text-sm font-medium text-gray-600">Click to upload Excel file</span>
+                  <span className="text-xs text-gray-400">.xlsx, .xls, or .csv</span>
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs text-gray-500">Paste a JSON array of question objects. Example:</p>
+              <pre className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 overflow-x-auto border border-gray-200">{example}</pre>
+              <textarea value={json} onChange={e => setJson(e.target.value)} rows={10} placeholder="Paste JSON array here…" className="w-full border-2 border-gray-200 rounded-xl p-3 text-xs font-mono focus:border-[#E63946] outline-none resize-y" />
+            </div>
+          )}
           {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
           {result && <p className="text-xs text-green-600 font-semibold">{result}</p>}
         </div>
         <div className="px-6 py-4 border-t flex gap-3 shrink-0">
           <button onClick={onClose} className="flex-1 h-10 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
-          <button onClick={handleImport} disabled={saving || !json.trim()} className="flex-1 h-10 bg-[#E63946] text-white rounded-xl text-sm font-semibold disabled:opacity-50">
-            {saving ? 'Importing…' : 'Import'}
-          </button>
+          {importMode === 'json' && (
+            <button onClick={handleImport} disabled={saving || !json.trim()} className="flex-1 h-10 bg-[#E63946] text-white rounded-xl text-sm font-semibold disabled:opacity-50">
+              {saving ? 'Importing…' : 'Import'}
+            </button>
+          )}
         </div>
       </div>
     </div>
