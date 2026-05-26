@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const pool = require('../db');
+import { Router } from 'express';
+import pool from '../db/pool.js';
+
+const router = Router();
 
 // Report hazard
 router.post('/', async (req, res) => {
@@ -76,4 +77,4 @@ router.put('/:id/resolve', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
