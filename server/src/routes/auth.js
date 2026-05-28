@@ -121,7 +121,8 @@ router.post('/register/init', validate('registerInit'), async (req, res, next) =
 router.post('/register/verify-otp', validate('otpVerify'), async (req, res, next) => {
   try {
     const { phone, email, code } = req.body;
-    const identifier = email || phone;
+    const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
+    const identifier = cleanPhone || email;
 
     const otpResult = await pool.query(
       `SELECT id, code, attempts FROM otp_codes 
