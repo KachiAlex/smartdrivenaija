@@ -13,6 +13,11 @@ function generateOTP(length = 6) {
   return Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
 }
 
+function normalizePhone(phone) {
+  if (!phone) return null;
+  return phone.replace(/\s/g, '');
+}
+
 function generateTokens(user) {
   const accessToken = jwt.sign(
     { id: user.id, email: user.email, phone: user.phone, role: user.role },
@@ -150,7 +155,7 @@ router.post('/register/verify-otp', validate('otpVerify'), async (req, res, next
     await pool.query(`UPDATE otp_codes SET verified = true WHERE id = $1`, [otpRecord.id]);
 
     const tempToken = jwt.sign(
-      { phone: phone || null, email: email || null, type: 'registration', iat: Date.now() },
+      { phone: cleanPhone || null, email: email || null, type: 'registration', iat: Date.now() },
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
@@ -237,10 +242,11 @@ router.post('/login', validate('login'), async (req, res, next) => {
     }
 
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    const lookupValue = isEmail ? identifier : normalizePhone(identifier);
 
     const userResult = await pool.query(
       `SELECT * FROM users WHERE ${isEmail ? 'email = $1' : 'phone = $1'}`,
-      [identifier]
+      [lookupValue]
     );
 
     if (userResult.rows.length === 0) {
@@ -303,7 +309,8 @@ router.post('/login', validate('login'), async (req, res, next) => {
 router.post('/login/otp-request', validate('otpRequest'), async (req, res, next) => {
   try {
     const { phone, email, deliveryMethod = 'sms' } = req.body;
-    const identifier = email || phone;
+    const cleanPhone = normalizePhone(phone);
+    const identifier = email || cleanPhone;
 
     if (!identifier) return res.status(400).json({ error: 'Phone or email required' });
 
@@ -330,7 +337,8 @@ router.post('/login/otp-request', validate('otpRequest'), async (req, res, next)
 router.post('/login/otp-verify', validate('otpVerify'), async (req, res, next) => {
   try {
     const { phone, email, code, deviceFingerprint, deviceName } = req.body;
-    const identifier = email || phone;
+    const cleanPhone = normalizePhone(phone);
+    const identifier = email || cleanPhone;
 
     const otpResult = await pool.query(
       `SELECT id, code, attempts FROM otp_codes 
