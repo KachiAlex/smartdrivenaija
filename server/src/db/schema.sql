@@ -40,6 +40,9 @@ CREATE TABLE IF NOT EXISTS users (
   streak_longest INTEGER DEFAULT 0,
   streak_last_activity DATE,
   onboarding_completed BOOLEAN DEFAULT false,
+  password_hash VARCHAR(255),
+  password_set_at TIMESTAMPTZ,
+  state VARCHAR(50),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

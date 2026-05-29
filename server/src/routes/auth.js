@@ -189,9 +189,9 @@ router.post('/register/complete', validate('registerComplete'), async (req, res,
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     const result = await pool.query(
-      `INSERT INTO users (phone, email, password_hash, full_name, state, password_set_at)
-       VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
-      [payloadPhone || null, payloadEmail || null, passwordHash, fullName, state]
+      `INSERT INTO users (phone, email, password_hash, full_name, password_set_at)
+       VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
+      [payloadPhone || null, payloadEmail || null, passwordHash, fullName]
     );
 
     const user = result.rows[0];
