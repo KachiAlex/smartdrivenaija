@@ -4,7 +4,8 @@ import { AppProvider } from "./context/AppContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { I18nProvider } from "./context/I18nContext";
 import { SplashScreen } from "./screens/SplashScreen";
-import { OnboardingScreen } from "./screens/OnboardingScreen";
+import { ColdStartScreen } from "./screens/ColdStartScreen";
+import { DiagnosticScreen } from "./screens/DiagnosticScreen";
 import { LoginScreen } from "./screens/LoginScreen";
 import { OTPScreen } from "./screens/OTPScreen";
 import { LanguageSelectionScreen } from "./screens/LanguageSelectionScreen";
@@ -28,11 +29,12 @@ import { Toaster } from "./components/ui/sonner";
 
 type Screen =
   | "splash"
-  | "onboarding"
+  | "cold-start"
   | "login"
   | "otp"
   | "register"
   | "forgot-password"
+  | "diagnostic"
   | "language"
   | "home"
   | "modules"
@@ -56,6 +58,8 @@ function AppContent() {
   const [email, setEmail] = useState("");
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
+  const [pendingTestDate, setPendingTestDate] = useState<string | null>(null);
+  const [pendingAlreadyLicensed, setPendingAlreadyLicensed] = useState(false);
 
   const splashDoneRef = useRef(false);
   const otpPendingRef = useRef(false);
@@ -67,12 +71,12 @@ function AppContent() {
     const routeAfterAuth = () => {
       if (isAuthenticated) {
         if (isNewUser || !user?.onboardingCompleted) {
-          setCurrentScreen("language");
+          setCurrentScreen("diagnostic");
         } else {
           setCurrentScreen("home");
         }
       } else {
-        setCurrentScreen("onboarding");
+        setCurrentScreen("cold-start");
       }
     };
 
@@ -85,12 +89,12 @@ function AppContent() {
       otpPendingRef.current = false;
       if (isAuthenticated) {
         if (isNewUser || !user?.onboardingCompleted) {
-          setCurrentScreen("language");
+          setCurrentScreen("diagnostic");
         } else {
           setCurrentScreen("home");
         }
       } else {
-        setCurrentScreen("onboarding");
+        setCurrentScreen("cold-start");
       }
     }
   }, [isLoading, isAuthenticated, isNewUser, user]);
@@ -103,12 +107,12 @@ function AppContent() {
 
     if (isAuthenticated) {
       if (isNewUser || !user?.onboardingCompleted) {
-        setCurrentScreen("language");
+        setCurrentScreen("diagnostic");
       } else {
         setCurrentScreen("home");
       }
     } else {
-      setCurrentScreen("onboarding");
+      setCurrentScreen("cold-start");
     }
   };
 
@@ -141,7 +145,7 @@ function AppContent() {
 
     if (isAuthenticated) {
       if (isNewUser || !user?.onboardingCompleted) {
-        setCurrentScreen("language");
+        setCurrentScreen("diagnostic");
       } else {
         setCurrentScreen("home");
       }
@@ -155,7 +159,21 @@ function AppContent() {
   return (
     <div className="min-h-[100dvh] min-h-screen w-full bg-background relative">
       {currentScreen === "splash" && <SplashScreen onComplete={handleSplashComplete} />}
-      {currentScreen === "onboarding" && <OnboardingScreen onComplete={() => setCurrentScreen("login")} />}
+      {currentScreen === "cold-start" && (
+        <ColdStartScreen
+          onComplete={(testDate, alreadyLicensed) => {
+            setPendingTestDate(testDate);
+            setPendingAlreadyLicensed(alreadyLicensed);
+            setCurrentScreen("login");
+          }}
+        />
+      )}
+      {currentScreen === "diagnostic" && (
+        <DiagnosticScreen
+          onComplete={() => setCurrentScreen("language")}
+          onSkip={() => setCurrentScreen("language")}
+        />
+      )}
       {currentScreen === "login" && (
         <LoginScreen
           onLogin={handleLoginSuccess}
@@ -184,7 +202,7 @@ function AppContent() {
         />
       )}
       {currentScreen === "language" && (
-        <LanguageSelectionScreen onComplete={() => setCurrentScreen("home")} />
+        <LanguageSelectionScreen onComplete={() => setCurrentScreen("home")} testDate={pendingTestDate} />
       )}
       {currentScreen === "home" && <HomeScreen onNavigate={navigate} />}
       {currentScreen === "modules" && <ModulesScreen onNavigate={navigate} />}

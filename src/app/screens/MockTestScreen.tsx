@@ -8,13 +8,14 @@ import { Clock, Flag, ArrowRight, FileCheck, Loader2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import type { Question, QuizAnswer } from "../lib/api";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
 
 interface MockTestScreenProps {
   onNavigate: (screen: string) => void;
 }
 
 export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
-  const { startMockTest, submitMockTest, currentMockTest, lastMockResult, loading } = useApp();
+  const { startMockTest, submitMockTest, currentMockTest, lastMockResult, loading, readinessScore, loadReadiness } = useApp();
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -24,6 +25,10 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const testStartTime = useRef(Date.now());
   const questionStartTimes = useRef<number[]>([]);
+
+  useEffect(() => {
+    loadReadiness();
+  }, [loadReadiness]);
 
   // Timer countdown
   useEffect(() => {
@@ -84,6 +89,55 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
   }, [handleSubmit]);
 
   if (!hasStarted) {
+    const READINESS_THRESHOLD = 65;
+    const isGated = readinessScore !== null && readinessScore < READINESS_THRESHOLD;
+
+    if (isGated) {
+      return (
+        <div className="size-full flex flex-col items-center justify-center bg-[#F0FDF4] p-6 pb-28">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+            className="p-8 rounded-full bg-[#15803D]/10 mb-6"
+          >
+            <Lock className="w-16 h-16 text-[#15803D]" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-center mb-8 max-w-md"
+          >
+            <h1 className="mb-4 text-[#14532D]" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "Poppins" }}>
+              Not quite ready yet
+            </h1>
+            <p className="text-[#4B7C5F] text-lg leading-relaxed mb-4">
+              Your readiness score is {readinessScore}%. We recommend reaching {READINESS_THRESHOLD}% before taking a full mock test.
+            </p>
+            <p className="text-[#4B7C5F] text-sm">
+              Keep studying and you'll get there soon. Your first mock result matters — make it a good one!
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="w-full max-w-md space-y-3"
+          >
+            <Button onClick={() => onNavigate("modules")} className="w-full h-12 shadow-lg shadow-[#15803D]/20" size="lg"
+              style={{ background: "linear-gradient(135deg, #15803D, #22C55E)" }}
+            >
+              Continue Studying
+            </Button>
+            <Button onClick={() => onNavigate("home")} variant="outline" className="w-full h-12 border-[#15803D]/30 text-[#15803D]" size="lg">
+              Back to Home
+            </Button>
+          </motion.div>
+        </div>
+      );
+    }
+
     return (
       <div className="size-full flex flex-col items-center justify-center bg-[#F0FDF4] p-6 pb-28">
         <motion.div

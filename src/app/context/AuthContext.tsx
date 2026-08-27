@@ -18,6 +18,9 @@ interface AuthContextType extends AuthState {
   requestPasswordReset: (phone: string, email?: string, deliveryMethod?: 'sms' | 'email' | 'both') => Promise<{ expiresIn: number; _dev_otp?: string }>;
   confirmPasswordReset: (phone: string, code: string, newPassword: string, email?: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  setTestDate: (testDate: string | null) => Promise<void>;
+  setTestOutcome: (outcome: 'passed' | 'failed') => Promise<void>;
+  completeOnboarding: (data: { fullName?: string; preferredLanguage?: string; testDate?: string | null; state?: string | null }) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
   refreshProfile: () => Promise<void>;
@@ -126,6 +129,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await api.changePassword(currentPassword, newPassword);
   }, []);
 
+  const setTestDate = useCallback(async (testDate: string | null) => {
+    await api.setTestDate(testDate);
+    setState(s => ({ ...s, user: s.user ? { ...s.user, testDate } : null }));
+  }, []);
+
+  const setTestOutcome = useCallback(async (outcome: 'passed' | 'failed') => {
+    await api.setTestOutcome(outcome);
+    setState(s => ({ ...s, user: s.user ? { ...s.user, testOutcome: outcome } : null }));
+  }, []);
+
+  const completeOnboarding = useCallback(async (data: { fullName?: string; preferredLanguage?: string; testDate?: string | null; state?: string | null }) => {
+    await api.completeOnboarding(data);
+    const user = await api.getProfile();
+    setState(s => ({ ...s, user, isNewUser: !user.onboardingCompleted }));
+  }, []);
+
   const logout = useCallback(async () => {
     await api.logout();
     setState({ user: null, isAuthenticated: false, isLoading: false, isNewUser: false });
@@ -148,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, requestOTP, verifyOTP, registerInit, registerVerifyOTP, registerComplete, requestPasswordReset, confirmPasswordReset, changePassword, logout, updateUser, refreshProfile }}>
+    <AuthContext.Provider value={{ ...state, login, requestOTP, verifyOTP, registerInit, registerVerifyOTP, registerComplete, requestPasswordReset, confirmPasswordReset, changePassword, setTestDate, setTestOutcome, completeOnboarding, logout, updateUser, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

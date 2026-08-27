@@ -135,6 +135,32 @@ router.post('/:moduleId/submit', async (req, res, next) => {
           moduleId,
         })]
       );
+
+      // Update per-question strength
+      const correctInt = a.correct ? 1 : 0;
+      await pool.query(
+        `INSERT INTO user_question_strength (user_id, question_id, strength, last_seen_at, times_seen, times_correct)
+         VALUES ($1, $2, $3, NOW(), 1, $4)
+         ON CONFLICT (user_id, question_id) DO UPDATE
+         SET strength = EXCLUDED.strength, last_seen_at = NOW(),
+             times_seen = user_question_strength.times_seen + 1,
+             times_correct = user_question_strength.times_correct + $4`,
+        [userId, a.question_id, correctInt, correctInt]
+      );
+
+      // Update topic mastery
+      if (a.topic_tag) {
+        await pool.query(
+          `INSERT INTO user_topic_mastery (user_id, topic_tag, mastery_score, questions_answered, questions_correct, last_updated_at)
+           VALUES ($1, $2, $3, 1, $4, NOW())
+           ON CONFLICT (user_id, topic_tag) DO UPDATE
+           SET questions_answered = user_topic_mastery.questions_answered + 1,
+               questions_correct = user_topic_mastery.questions_correct + $4,
+               mastery_score = user_topic_mastery.questions_correct::REAL / (user_topic_mastery.questions_answered + 1),
+               last_updated_at = NOW()`,
+          [userId, a.topic_tag, correctInt, correctInt]
+        );
+      }
     }
 
     // Check badges

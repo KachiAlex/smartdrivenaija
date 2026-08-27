@@ -206,18 +206,64 @@ class ApiClient {
     return this.request<User>('/user/profile');
   }
 
-  async updateProfile(data: { fullName?: string; preferredLanguage?: string }) {
+  async updateProfile(data: { fullName?: string; preferredLanguage?: string; testDate?: string | null; state?: string | null }) {
     return this.request<User>('/user/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  async completeOnboarding(data: { fullName?: string; preferredLanguage?: string }) {
+  async setTestDate(testDate: string | null) {
+    return this.request<{ message: string; testDate: string | null }>('/user/test-date', {
+      method: 'POST',
+      body: JSON.stringify({ testDate }),
+    });
+  }
+
+  async setTestOutcome(outcome: 'passed' | 'failed') {
+    return this.request<{ message: string; outcome: string }>('/user/test-outcome', {
+      method: 'POST',
+      body: JSON.stringify({ outcome }),
+    });
+  }
+
+  async completeOnboarding(data: { fullName?: string; preferredLanguage?: string; testDate?: string | null; state?: string | null }) {
     return this.request('/user/onboarding-complete', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  // ── Cold Start (public, no auth) ─────────────────────────
+  async getColdStartQuestions() {
+    return this.request<{ questions: ColdStartQuestion[] }>('/diagnostic/cold-start', {
+      method: 'GET',
+      skipAuth: true,
+    });
+  }
+
+  async checkColdStartAnswers(answers: { questionId: number; selected: number }[]) {
+    return this.request<{ score: number; total: number; results: ColdStartResult[] }>('/diagnostic/cold-start/check', {
+      method: 'POST',
+      body: JSON.stringify({ answers }),
+      skipAuth: true,
+    });
+  }
+
+  // ── Diagnostic (authenticated) ───────────────────────────
+  async getDiagnosticQuestions() {
+    return this.request<{ questions: DiagnosticQuestion[]; alreadyCompleted: boolean }>('/diagnostic/diagnostic');
+  }
+
+  async submitDiagnostic(answers: { questionId: number; selected: number; topicTag: string }[]) {
+    return this.request<{ readinessScore: number; topicMastery: TopicMastery[] }>('/diagnostic/diagnostic/submit', {
+      method: 'POST',
+      body: JSON.stringify({ answers }),
+    });
+  }
+
+  async getReadiness() {
+    return this.request<{ readinessScore: number | null; topicMastery: TopicMastery[]; message?: string }>('/diagnostic/readiness');
   }
 
   // ── Modules ───────────────────────────────────────────────
@@ -530,6 +576,9 @@ export interface User {
   streakCurrent: number;
   streakLongest?: number;
   onboardingCompleted: boolean;
+  testDate?: string | null;
+  testOutcome?: string | null;
+  state?: string | null;
   createdAt?: string;
 }
 
@@ -869,6 +918,39 @@ export interface Hazard {
   expires_at: string;
   resolved_at: string | null;
   reporter_name?: string;
+}
+
+export interface ColdStartQuestion {
+  id: number;
+  topicTag: string;
+  question: string;
+  options: string[];
+  difficulty: number;
+}
+
+export interface ColdStartResult {
+  questionId: number;
+  correct: boolean;
+  correctAnswer: number;
+  explanation: string;
+  topicTag: string;
+}
+
+export interface DiagnosticQuestion {
+  id: number;
+  topicTag: string;
+  question: string;
+  options: string[];
+  difficulty: number;
+  moduleId: number;
+}
+
+export interface TopicMastery {
+  topicTag: string;
+  mastery: number;
+  answered: number;
+  correct: number;
+  weight?: number;
 }
 
 // Singleton instance

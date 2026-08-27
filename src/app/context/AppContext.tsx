@@ -9,6 +9,7 @@ import {
   type MockTestResult,
   type QuizAnswer,
   type LeaderboardResponse,
+  type TopicMastery,
 } from '../lib/api';
 
 interface AppState {
@@ -19,6 +20,8 @@ interface AppState {
   lastQuizResult: QuizResult | null;
   lastMockResult: MockTestResult | null;
   leaderboard: LeaderboardResponse | null;
+  readinessScore: number | null;
+  topicMastery: TopicMastery[];
   loading: Record<string, boolean>;
 }
 
@@ -31,6 +34,7 @@ interface AppContextType extends AppState {
   startMockTest: (count?: number) => Promise<MockTestStart>;
   submitMockTest: (testId: string, answers: QuizAnswer[], timeTakenSeconds: number) => Promise<MockTestResult>;
   loadLeaderboard: (period?: 'weekly' | 'alltime' | 'score') => Promise<void>;
+  loadReadiness: () => Promise<void>;
   setLoading: (key: string, value: boolean) => void;
 }
 
@@ -45,6 +49,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     lastQuizResult: null,
     lastMockResult: null,
     leaderboard: null,
+    readinessScore: null,
+    topicMastery: [],
     loading: {},
   });
 
@@ -132,6 +138,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [setLoading]);
 
+  const loadReadiness = useCallback(async () => {
+    setLoading('readiness', true);
+    try {
+      const data = await api.getReadiness();
+      setState(s => ({ ...s, readinessScore: data.readinessScore, topicMastery: data.topicMastery }));
+    } catch {
+      setState(s => ({ ...s, readinessScore: null, topicMastery: [] }));
+    } finally {
+      setLoading('readiness', false);
+    }
+  }, [setLoading]);
+
   return (
     <AppContext.Provider value={{
       ...state,
@@ -143,6 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       startMockTest,
       submitMockTest,
       loadLeaderboard,
+      loadReadiness,
       setLoading,
     }}>
       {children}

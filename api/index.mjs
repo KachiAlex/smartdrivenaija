@@ -27,6 +27,7 @@ import renewalMarketplaceRoutes from '../server/src/routes/renewalMarketplace.js
 import routeIntelligenceRoutes from '../server/src/routes/routeIntelligence.js';
 import insurancePortalRoutes from '../server/src/routes/insurancePortal.js';
 import computerVisionRoutes from '../server/src/routes/computerVision.js';
+import diagnosticRoutes from '../server/src/routes/diagnostic.js';
 import { errorHandler } from '../server/src/middleware/errorHandler.js';
 
 const app = express();
@@ -70,6 +71,7 @@ app.use('/renewal-marketplace', renewalMarketplaceRoutes);
 app.use('/route-intelligence', routeIntelligenceRoutes);
 app.use('/insurance-portal', insurancePortalRoutes);
 app.use('/computer-vision', computerVisionRoutes);
+app.use('/diagnostic', diagnosticRoutes);
 
 // Error handling
 app.use(errorHandler);

@@ -16,6 +16,7 @@ router.get('/profile', async (req, res, next) => {
     res.json({
       id: u.id,
       phone: u.phone,
+      email: u.email,
       fullName: u.full_name,
       role: u.role,
       preferredLanguage: u.preferred_language,
@@ -24,6 +25,9 @@ router.get('/profile', async (req, res, next) => {
       streakCurrent: u.streak_current,
       streakLongest: u.streak_longest,
       onboardingCompleted: u.onboarding_completed,
+      testDate: u.test_date,
+      testOutcome: u.test_outcome,
+      state: u.state,
       createdAt: u.created_at,
     });
   } catch (err) {
@@ -47,6 +51,14 @@ router.put('/profile', async (req, res, next) => {
       updates.push(`preferred_language = $${idx++}`);
       values.push(preferredLanguage);
     }
+    if (req.body.testDate !== undefined) {
+      updates.push(`test_date = $${idx++}`);
+      values.push(req.body.testDate || null);
+    }
+    if (req.body.state !== undefined) {
+      updates.push(`state = $${idx++}`);
+      values.push(req.body.state || null);
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
@@ -62,6 +74,7 @@ router.put('/profile', async (req, res, next) => {
     res.json({
       id: u.id,
       phone: u.phone,
+      email: u.email,
       fullName: u.full_name,
       role: u.role,
       preferredLanguage: u.preferred_language,
@@ -70,7 +83,44 @@ router.put('/profile', async (req, res, next) => {
       streakCurrent: u.streak_current,
       streakLongest: u.streak_longest,
       onboardingCompleted: u.onboarding_completed,
+      testDate: u.test_date,
+      testOutcome: u.test_outcome,
+      state: u.state,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /user/test-date — set test date (can be called before onboarding-complete)
+router.post('/test-date', async (req, res, next) => {
+  try {
+    const { testDate } = req.body;
+    if (!testDate && testDate !== null) {
+      return res.status(400).json({ error: 'testDate is required' });
+    }
+    await pool.query(
+      `UPDATE users SET test_date = $2 WHERE id = $1`,
+      [req.user.id, testDate || null]
+    );
+    res.json({ message: 'Test date updated', testDate: testDate || null });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /user/test-outcome — self-reported test result
+router.post('/test-outcome', async (req, res, next) => {
+  try {
+    const { outcome } = req.body;
+    if (!outcome || !['passed', 'failed'].includes(outcome)) {
+      return res.status(400).json({ error: 'outcome must be "passed" or "failed"' });
+    }
+    await pool.query(
+      `UPDATE users SET test_outcome = $2, test_outcome_reported_at = NOW() WHERE id = $1`,
+      [req.user.id, outcome]
+    );
+    res.json({ message: 'Test outcome recorded', outcome });
   } catch (err) {
     next(err);
   }
@@ -79,10 +129,10 @@ router.put('/profile', async (req, res, next) => {
 // POST /user/onboarding-complete
 router.post('/onboarding-complete', async (req, res, next) => {
   try {
-    const { fullName, preferredLanguage } = req.body;
+    const { fullName, preferredLanguage, testDate, state } = req.body;
     await pool.query(
-      `UPDATE users SET onboarding_completed = true, full_name = COALESCE($2, full_name), preferred_language = COALESCE($3, preferred_language) WHERE id = $1`,
-      [req.user.id, fullName || null, preferredLanguage || null]
+      `UPDATE users SET onboarding_completed = true, full_name = COALESCE($2, full_name), preferred_language = COALESCE($3, preferred_language), test_date = COALESCE($4, test_date), state = COALESCE($5, state) WHERE id = $1`,
+      [req.user.id, fullName || null, preferredLanguage || null, testDate || null, state || null]
     );
 
     // Initialize module progress for this user

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 interface LanguageSelectionScreenProps {
   onComplete: () => void;
+  testDate?: string | null;
 }
 
 const languages = [
@@ -19,7 +20,7 @@ const languages = [
   { id: "pi", name: "Pidgin", region: "Widely Spoken", icon: "🇳🇬" }
 ];
 
-export function LanguageSelectionScreen({ onComplete }: LanguageSelectionScreenProps) {
+export function LanguageSelectionScreen({ onComplete, testDate }: LanguageSelectionScreenProps) {
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [isSaving, setIsSaving] = useState(false);
   const { updateUser } = useAuth();
@@ -27,7 +28,7 @@ export function LanguageSelectionScreen({ onComplete }: LanguageSelectionScreenP
   const handleComplete = async () => {
     setIsSaving(true);
     try {
-      await api.completeOnboarding({ preferredLanguage: selectedLanguage });
+      await api.completeOnboarding({ preferredLanguage: selectedLanguage, testDate: testDate || undefined });
       updateUser({ preferredLanguage: selectedLanguage, onboardingCompleted: true });
       onComplete();
     } catch (err: any) {

@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { ProgressCircle } from "../components/ProgressCircle";
 
 import { Badge } from "../components/ui/badge";
-import { Flame, Zap, BookOpen, PlayCircle, Trophy, TrendingUp, AlertTriangle, User } from "lucide-react";
+import { Flame, Zap, BookOpen, PlayCircle, Trophy, TrendingUp, AlertTriangle, User, Calendar, Target } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
 import { AnimatedCounter } from "../components/AnimatedCounter";
@@ -16,17 +16,21 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const { user } = useAuth();
-  const { progress, modules, loadProgress, loadModules } = useApp();
+  const { progress, modules, readinessScore, loadProgress, loadModules, loadReadiness } = useApp();
 
   useEffect(() => {
     loadProgress();
     loadModules();
-  }, [loadProgress, loadModules]);
+    loadReadiness();
+  }, [loadProgress, loadModules, loadReadiness]);
 
   const firstName = user?.fullName?.split(' ')[0] || 'Learner';
-  const overallPercent = progress?.overallPercent || 0;
+  const readiness = readinessScore ?? null;
   const streakCurrent = progress?.streakCurrent || user?.streakCurrent || 0;
   const xpTotal = progress?.xpTotal || user?.xpTotal || 0;
+
+  // Days to test
+  const daysToTest = user?.testDate ? Math.ceil((new Date(user.testDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
 
   // Find first in-progress module
   const inProgressModule = progress?.modules?.find(m => m.status === 'in_progress') || progress?.modules?.[0];
@@ -64,7 +68,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           </h1>
         </motion.div>
 
-        {/* Glass hero card */}
+        {/* Glass hero card — Readiness as North Star */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -74,13 +78,23 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           <div className="glass-card p-6 rounded-2xl">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-white/70 mb-2 font-medium">Your Progress</p>
+                <p className="text-white/70 mb-2 font-medium">Readiness Score</p>
                 <h2 className="text-white mb-2" style={{ fontSize: "1.25rem", fontWeight: 600, fontFamily: "Poppins" }}>
-                  Overall Completion
+                  {readiness !== null ? `${readiness}% ready` : 'Take diagnostic to start'}
                 </h2>
                 <p className="text-white/80 text-sm">
-                  {overallPercent === 0 ? "Start your learning journey!" : "Keep going! You're doing great."}
+                  {readiness === null
+                    ? "We'll estimate your readiness after a quick diagnostic."
+                    : readiness >= 65
+                    ? "You're on track! Keep going."
+                    : "Keep studying — you'll get there."}
                 </p>
+                {daysToTest !== null && daysToTest > 0 && (
+                  <p className="text-white/60 text-xs mt-1 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {daysToTest} day{daysToTest !== 1 ? 's' : ''} to your test
+                  </p>
+                )}
               </div>
               <motion.div
                 initial={{ scale: 0 }}
@@ -88,7 +102,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                 transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
                 className="glow-pulse rounded-full"
               >
-                <ProgressCircle progress={overallPercent} size={100} />
+                <ProgressCircle progress={readiness ?? 0} size={100} />
               </motion.div>
             </div>
           </div>
@@ -141,6 +155,41 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                 style={{ fontFamily: "Poppins" }}
               />
             </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Daily Session CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="perspective-card"
+          >
+            <Card className="p-5 cursor-pointer glass-card border-[#15803D]/10 hover:shadow-xl hover:shadow-[#15803D]/10 transition-all" onClick={() => onNavigate("modules")}
+            >
+              <div className="flex items-center gap-4">
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  className="p-4 rounded-2xl bg-gradient-to-br from-[#15803D] to-[#22C55E]"
+                >
+                  <Target className="w-8 h-8 text-white" />
+                </motion.div>
+                <div className="flex-1">
+                  <h4 className="mb-1 font-semibold text-[#14532D]">Today's Session</h4>
+                  <p className="text-sm text-[#4B7C5F]">
+                    {readiness !== null && readiness >= 65
+                      ? "You're ready for a mock test!"
+                      : "Continue your daily practice"}
+                  </p>
+                </div>
+                <BookOpen className="w-5 h-5 text-[#15803D]" />
+              </div>
+            </Card>
           </motion.div>
         </motion.div>
 

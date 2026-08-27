@@ -33,6 +33,7 @@ import insurancePortalRoutes from './routes/insurancePortal.js';
 import renewalMarketplaceRoutes from './routes/renewalMarketplace.js';
 import computerVisionRoutes from './routes/computerVision.js';
 import biometricRoutes from './routes/biometric.js';
+import diagnosticRoutes from './routes/diagnostic.js';
 import adminRoutes from './routes/admin.js';
 import { errorHandler, requestId } from './middleware/errorHandler.js';
 import pool from './db/pool.js';
@@ -147,6 +148,7 @@ app.use('/insurance', insurancePortalRoutes);
 app.use('/renewal', renewalMarketplaceRoutes);
 app.use('/computer-vision', computerVisionRoutes);
 app.use('/biometric', biometricRoutes);
+app.use('/diagnostic', diagnosticRoutes);
 app.use('/admin', adminRoutes);
 
 // Error handler
