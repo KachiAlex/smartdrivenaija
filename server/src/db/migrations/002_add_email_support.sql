@@ -5,7 +5,7 @@
 ALTER TABLE otp_codes ALTER COLUMN phone TYPE VARCHAR(255);
 
 -- 2. Add email column to users table
-ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(255) UNIQUE;
 
 -- 3. Make phone nullable since email can be the primary identifier
 ALTER TABLE users ALTER COLUMN phone DROP NOT NULL;
