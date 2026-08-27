@@ -1,14 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { ProgressCircle } from "../components/ProgressCircle";
 
 import { Badge } from "../components/ui/badge";
-import { Flame, Zap, BookOpen, PlayCircle, Trophy, TrendingUp, AlertTriangle, User, Calendar, Target } from "lucide-react";
+import { Flame, Zap, BookOpen, PlayCircle, Trophy, TrendingUp, AlertTriangle, User, Calendar, Target, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
 import { AnimatedCounter } from "../components/AnimatedCounter";
+import { api } from "../lib/api";
 
 interface HomeScreenProps {
   onNavigate: (screen: string, data?: { moduleId?: number; lessonId?: number }) => void;
@@ -17,11 +18,13 @@ interface HomeScreenProps {
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const { user } = useAuth();
   const { progress, modules, readinessScore, loadProgress, loadModules, loadReadiness } = useApp();
+  const [testPrompt, setTestPrompt] = useState<{ shouldPrompt: boolean; daysSinceTest?: number } | null>(null);
 
   useEffect(() => {
     loadProgress();
     loadModules();
     loadReadiness();
+    api.getTestOutcomePrompt().then(setTestPrompt).catch(() => {});
   }, [loadProgress, loadModules, loadReadiness]);
 
   const firstName = user?.fullName?.split(' ')[0] || 'Learner';
@@ -158,6 +161,30 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           </motion.div>
         </motion.div>
 
+        {/* Test outcome prompt */}
+        {testPrompt?.shouldPrompt && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-2xl bg-[#F59E0B]/10 border border-[#F59E0B]/30"
+          >
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-[#B45309] flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-[#14532D] font-medium text-sm">Your test date has passed</p>
+                <p className="text-[#4B7C5F] text-xs">How did it go? Let us know your result.</p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => onNavigate("test-outcome")}
+                className="bg-[#F59E0B] text-white hover:bg-[#B45309]"
+              >
+                Report
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Daily Session CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -169,7 +196,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             whileTap={{ scale: 0.98 }}
             className="perspective-card"
           >
-            <Card className="p-5 cursor-pointer glass-card border-[#15803D]/10 hover:shadow-xl hover:shadow-[#15803D]/10 transition-all" onClick={() => onNavigate("modules")}
+            <Card className="p-5 cursor-pointer glass-card border-[#15803D]/10 hover:shadow-xl hover:shadow-[#15803D]/10 transition-all" onClick={() => onNavigate("session")}
             >
               <div className="flex items-center gap-4">
                 <motion.div
@@ -184,10 +211,10 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                   <p className="text-sm text-[#4B7C5F]">
                     {readiness !== null && readiness >= 65
                       ? "You're ready for a mock test!"
-                      : "Continue your daily practice"}
+                      : "~7 min • Warm-up, new ground, clip, close"}
                   </p>
                 </div>
-                <BookOpen className="w-5 h-5 text-[#15803D]" />
+                <PlayCircle className="w-6 h-6 text-[#15803D]" />
               </div>
             </Card>
           </motion.div>

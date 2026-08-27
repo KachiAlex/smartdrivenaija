@@ -266,6 +266,36 @@ class ApiClient {
     return this.request<{ readinessScore: number | null; topicMastery: TopicMastery[]; message?: string }>('/diagnostic/readiness');
   }
 
+  // ── Daily Session ────────────────────────────────────────
+  async getTodaySession() {
+    return this.request<TodaySession>('/session/today');
+  }
+
+  async submitWarmup(answers: { questionId: number; selected: number; timeMs?: number }[]) {
+    return this.request<{ score: number; total: number; percentage: number }>('/session/warmup/submit', {
+      method: 'POST',
+      body: JSON.stringify({ answers }),
+    });
+  }
+
+  async completeSession(data: { warmupScore?: number; warmupTotal?: number; newGroundCompleted?: boolean; durationSeconds?: number }) {
+    return this.request<{ readinessScore: number | null; streakCurrent: number; xpTotal: number; message: string }>('/session/complete', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async submitTestOutcome(outcome: 'passed' | 'failed') {
+    return this.request<{ outcome: string; retakePlan?: RetakePlanItem[]; message: string; nextSteps?: string }>('/session/test-outcome', {
+      method: 'POST',
+      body: JSON.stringify({ outcome }),
+    });
+  }
+
+  async getTestOutcomePrompt() {
+    return this.request<{ shouldPrompt: boolean; testDate?: string; testOutcome?: string; daysSinceTest?: number }>('/session/test-outcome/prompt');
+  }
+
   // ── Modules ───────────────────────────────────────────────
   async getModules() {
     return this.request<Module[]>('/modules');
@@ -951,6 +981,70 @@ export interface TopicMastery {
   answered: number;
   correct: number;
   weight?: number;
+}
+
+export interface SessionQuestion {
+  id: number;
+  topicTag: string;
+  question: string;
+  options: string[];
+  answer: number;
+  difficulty: number;
+  explanation: string;
+  moduleId: number;
+  isReview: boolean;
+  strength?: number;
+  predictedRecall?: number;
+}
+
+export interface SessionModule {
+  id: number;
+  slug: string;
+  title: string;
+  icon: string;
+  estimatedMinutes: number;
+  xpReward: number;
+}
+
+export interface SessionLesson {
+  id: number;
+  title: string;
+  content: string;
+  estimatedMinutes: number;
+  xpReward: number;
+}
+
+export interface NewGround {
+  module: SessionModule;
+  lessons: SessionLesson[];
+  questions: SessionQuestion[];
+}
+
+export interface SessionClip {
+  type: string;
+  title: string;
+  description: string;
+  available: boolean;
+}
+
+export interface TodaySession {
+  warmup: SessionQuestion[];
+  newGround: NewGround | null;
+  clip: SessionClip;
+  close: {
+    readinessScore: number | null;
+    streakCurrent: number;
+    xpTotal: number;
+  };
+  alreadyCompletedToday: boolean;
+  reviewThreshold: number;
+  daysToTest: number | null;
+}
+
+export interface RetakePlanItem {
+  topicTag: string;
+  mastery: number;
+  questionsToFocus: number;
 }
 
 // Singleton instance

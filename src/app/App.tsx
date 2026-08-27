@@ -24,6 +24,8 @@ import { EmergencyScreen } from "./screens/EmergencyScreen";
 import { FirstAidScreen } from "./screens/FirstAidScreen";
 import { RegisterScreen } from "./screens/RegisterScreen";
 import { ForgotPasswordScreen } from "./screens/ForgotPasswordScreen";
+import { SessionScreen } from "./screens/SessionScreen";
+import { TestOutcomeScreen } from "./screens/TestOutcomeScreen";
 import { BottomNav } from "./components/BottomNav";
 import { Toaster } from "./components/ui/sonner";
 
@@ -48,7 +50,9 @@ type Screen =
   | "leaderboard"
   | "wallet"
   | "emergency"
-  | "first-aid";
+  | "first-aid"
+  | "session"
+  | "test-outcome";
 
 function AppContent() {
   const { isAuthenticated, isLoading, user, isNewUser } = useAuth();
@@ -219,6 +223,8 @@ function AppContent() {
       {currentScreen === "profile" && <ProfileScreen onNavigate={navigate} />}
       {currentScreen === "settings" && <SettingsScreen onNavigate={navigate} />}
       {currentScreen === "leaderboard" && <LeaderboardScreen onNavigate={navigate} />}
+      {currentScreen === "session" && <SessionScreen onNavigate={navigate} />}
+      {currentScreen === "test-outcome" && <TestOutcomeScreen onNavigate={navigate} />}
 
       {showBottomNav && <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />}
 
