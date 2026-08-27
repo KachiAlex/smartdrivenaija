@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { Logo } from "../components/Logo";
@@ -79,7 +79,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const shouldReduceMotion = useReducedMotion();
 
   /* Preload all images immediately */
-  const allImages = SLIDES.map((s) => s.image);
+  const allImages = useMemo(() => SLIDES.map((s) => s.image), []);
   const allLoaded = usePreloadAll(allImages);
 
   /* Haptic feedback helper */
@@ -215,7 +215,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   };
 
   /* Slide 0: full-bleed image with centered text overlay */
-  const WelcomeOverlay = () => (
+  const renderWelcomeOverlay = () => (
     <motion.div
       key="welcome"
       custom={direction}
@@ -269,6 +269,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         {/* Next button for welcome slide */}
         <motion.button
           onClick={nextSlide}
+          onPointerDown={(e) => e.stopPropagation()}
           className="mt-6 px-8 py-3 rounded-full bg-white text-[#15803D] font-semibold text-sm shadow-lg"
           initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -284,7 +285,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   );
 
   /* Slides 1-3: full-bleed image with white bottom card */
-  const ContentOverlay = () => (
+  const renderContentOverlay = () => (
     <motion.div
       key={`slide-${slide.id}`}
       custom={direction}
@@ -316,6 +317,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         {currentSlide > 0 && (
           <motion.button
             onClick={prevSlide}
+            onPointerDown={(e) => e.stopPropagation()}
             className="mb-4 flex items-center gap-1.5 text-[#4B7C5F] text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[#15803D] rounded px-1"
             whileTap={{ scale: 0.95 }}
             aria-label="Previous slide"
@@ -378,6 +380,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           {/* Next / Get Started button */}
           <motion.button
             onClick={nextSlide}
+            onPointerDown={(e) => e.stopPropagation()}
             className="w-14 h-14 rounded-full bg-[#15803D] flex items-center justify-center shadow-lg shadow-[#15803D]/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E] focus-visible:ring-offset-2"
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
@@ -480,7 +483,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       {/* Slide content overlay */}
       <div className="relative flex-1 z-10">
         <AnimatePresence mode="wait" custom={direction}>
-          {slide.id === 0 ? <WelcomeOverlay /> : <ContentOverlay />}
+          {slide.id === 0 ? renderWelcomeOverlay() : renderContentOverlay()}
         </AnimatePresence>
       </div>
 
