@@ -207,7 +207,7 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", email, onVerify, 
             className="w-full h-12 text-white font-semibold rounded-xl"
             size="lg"
             disabled={otp.length !== 6 || isVerifying}
-            style={{ background: "linear-gradient(135deg, #0C4A6E, #0A1F12)" }}
+            style={{ background: "linear-gradient(135deg, #15803D, #22C55E)" }}
           >
             {isVerifying ? (
               <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Verifying...</>

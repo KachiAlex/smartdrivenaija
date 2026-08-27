@@ -43,7 +43,8 @@ export function LoginScreen({ onLogin, onForgotPassword, onRegister }: LoginScre
     }
     setIsSubmitting(true);
     try {
-      await login(identifier, password);
+      const normalizedIdentifier = identifier.includes('@') ? identifier.trim().toLowerCase() : identifier;
+      await login(normalizedIdentifier, password);
     } catch (err: any) {
       if (err.message?.includes('PASSWORD_NOT_SET') || err.message?.includes('Password not set')) {
         toast.error('No password set. Use OTP login below.');
@@ -71,13 +72,13 @@ export function LoginScreen({ onLogin, onForgotPassword, onRegister }: LoginScre
     try {
       const result = await requestOTP(
         otpChannel === 'sms' ? cleanPhone : '',
-        otpChannel === 'email' ? email : undefined,
+        otpChannel === 'email' ? email.trim().toLowerCase() : undefined,
         otpChannel
       );
       if (result._dev_otp) {
         toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
       }
-      onLogin(cleanPhone, otpChannel === 'email' ? email : undefined);
+      onLogin(cleanPhone, otpChannel === 'email' ? email.trim().toLowerCase() : undefined);
     } catch (err: any) {
       toast.error(err.message || 'Failed to send OTP');
     } finally {
@@ -182,7 +183,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onRegister }: LoginScre
               </div>
 
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button type="submit" className="w-full h-12 text-white font-semibold rounded-xl" size="lg" disabled={isSubmitting || !identifier || !password} style={{ background: "linear-gradient(135deg, #0C4A6E, #0A1F12)" }}>
+                <Button type="submit" className="w-full h-12 text-white font-semibold rounded-xl" size="lg" disabled={isSubmitting || !identifier || !password} style={{ background: "linear-gradient(135deg, #15803D, #22C55E)" }}>
                   {isSubmitting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Signing in...</> : 'Sign In'}
                 </Button>
               </motion.div>
@@ -243,7 +244,7 @@ export function LoginScreen({ onLogin, onForgotPassword, onRegister }: LoginScre
               </div>
 
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button type="submit" className="w-full h-12 text-white font-semibold rounded-xl" size="lg" disabled={isSubmitting || (otpChannel === 'sms' ? !phoneNumber : !email)} style={{ background: "linear-gradient(135deg, #0C4A6E, #0A1F12)" }}>
+                <Button type="submit" className="w-full h-12 text-white font-semibold rounded-xl" size="lg" disabled={isSubmitting || (otpChannel === 'sms' ? !phoneNumber : !email)} style={{ background: "linear-gradient(135deg, #15803D, #22C55E)" }}>
                   {isSubmitting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Sending...</> : 'Send Verification Code'}
                 </Button>
               </motion.div>

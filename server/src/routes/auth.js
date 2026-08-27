@@ -18,6 +18,11 @@ function normalizePhone(phone) {
   return phone.replace(/\s/g, '');
 }
 
+function normalizeEmail(email) {
+  if (!email) return null;
+  return email.trim().toLowerCase();
+}
+
 function generateTokens(user) {
   const accessToken = jwt.sign(
     { id: user.id, email: user.email, phone: user.phone, role: user.role },
@@ -99,7 +104,8 @@ async function sendOTP(identifier, phone, email, deliveryMethod) {
 // Step 1: Init registration - send OTP
 router.post('/register/init', validate('registerInit'), async (req, res, next) => {
   try {
-    const { phone, email, deliveryMethod = 'sms' } = req.body;
+    const { phone, deliveryMethod = 'sms' } = req.body;
+    const email = normalizeEmail(req.body.email);
     const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
 
     // Check for existing account by phone OR email
@@ -125,7 +131,8 @@ router.post('/register/init', validate('registerInit'), async (req, res, next) =
 // Step 2: Verify OTP - return temp token to complete registration
 router.post('/register/verify-otp', validate('otpVerify'), async (req, res, next) => {
   try {
-    const { phone, email, code } = req.body;
+    const { phone, code } = req.body;
+    const email = normalizeEmail(req.body.email);
     const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
     const identifier = cleanPhone || email;
 
@@ -160,6 +167,7 @@ router.post('/register/verify-otp', validate('otpVerify'), async (req, res, next
       { expiresIn: '15m' }
     );
 
+
     res.json({
       message: 'OTP verified',
       tempToken,
@@ -172,6 +180,7 @@ router.post('/register/verify-otp', validate('otpVerify'), async (req, res, next
 router.post('/register/complete', validate('registerComplete'), async (req, res, next) => {
   try {
     const { tempToken, password, fullName, state } = req.body;
+    // email/phone come from the verified tempToken, already normalized at init
 
     let payload;
     try {
@@ -242,7 +251,7 @@ router.post('/login', validate('login'), async (req, res, next) => {
     }
 
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-    const lookupValue = isEmail ? identifier : normalizePhone(identifier);
+    const lookupValue = isEmail ? normalizeEmail(identifier) : normalizePhone(identifier);
 
     const userResult = await pool.query(
       `SELECT * FROM users WHERE ${isEmail ? 'email = $1' : 'phone = $1'}`,
@@ -250,22 +259,24 @@ router.post('/login', validate('login'), async (req, res, next) => {
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({
+        error: 'No account found with those details. Please register first.',
+        code: 'ACCOUNT_NOT_FOUND',
+      });
     }
 
     const user = userResult.rows[0];
 
     if (!user.password_hash) {
       return res.status(401).json({
-        error: 'Password not set',
+        error: 'Password not set. Please use OTP login or reset your password.',
         code: 'PASSWORD_NOT_SET',
-        message: 'Please use OTP login or reset your password',
       });
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Incorrect password. Try OTP login if you forgot your password.', code: 'WRONG_PASSWORD' });
     }
 
     const tokens = generateTokens(user);
@@ -308,7 +319,8 @@ router.post('/login', validate('login'), async (req, res, next) => {
 // OTP-based login (for passwordless users or fallback)
 router.post('/login/otp-request', validate('otpRequest'), async (req, res, next) => {
   try {
-    const { phone, email, deliveryMethod = 'sms' } = req.body;
+    const { phone, deliveryMethod = 'sms' } = req.body;
+    const email = normalizeEmail(req.body.email);
     const cleanPhone = normalizePhone(phone);
     const identifier = email || cleanPhone;
 
@@ -336,7 +348,8 @@ router.post('/login/otp-request', validate('otpRequest'), async (req, res, next)
 
 router.post('/login/otp-verify', validate('otpVerify'), async (req, res, next) => {
   try {
-    const { phone, email, code, deviceFingerprint, deviceName } = req.body;
+    const { phone, code, deviceFingerprint, deviceName } = req.body;
+    const email = normalizeEmail(req.body.email);
     const cleanPhone = normalizePhone(phone);
     const identifier = email || cleanPhone;
 
@@ -415,7 +428,8 @@ router.post('/login/otp-verify', validate('otpVerify'), async (req, res, next) =
 
 router.post('/password-reset/request', validate('otpRequest'), async (req, res, next) => {
   try {
-    const { phone, email, deliveryMethod = 'sms' } = req.body;
+    const { phone, deliveryMethod = 'sms' } = req.body;
+    const email = normalizeEmail(req.body.email);
     const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
     const identifier = cleanPhone || email;
 
@@ -448,7 +462,8 @@ router.post('/password-reset/request', validate('otpRequest'), async (req, res, 
 
 router.post('/password-reset/confirm', validate('passwordReset'), async (req, res, next) => {
   try {
-    const { phone, email, code, newPassword } = req.body;
+    const { phone, code, newPassword } = req.body;
+    const email = normalizeEmail(req.body.email);
     const cleanPhone = phone ? phone.replace(/\s/g, '') : null;
     const identifier = cleanPhone || email;
 
@@ -487,6 +502,7 @@ router.post('/password-reset/confirm', validate('passwordReset'), async (req, re
     if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'Account not found' });
     }
+
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await pool.query(

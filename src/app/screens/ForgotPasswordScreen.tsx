@@ -44,7 +44,7 @@ export function ForgotPasswordScreen({ onComplete, onBack }: ForgotPasswordScree
       const cleanPhone = channel === 'sms' ? normalizePhone(phone) : undefined;
       const result = await requestPasswordReset(
         cleanPhone || '',
-        channel === 'email' ? email : undefined,
+        channel === 'email' ? email.trim().toLowerCase() : undefined,
         channel
       );
       if (result._dev_otp) toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
@@ -73,7 +73,7 @@ export function ForgotPasswordScreen({ onComplete, onBack }: ForgotPasswordScree
         channel === 'sms' ? phone : '',
         otp,
         newPassword,
-        email || undefined
+        email ? email.trim().toLowerCase() : undefined
       );
       toast.success('Password reset! Please sign in with your new password.');
       onComplete();

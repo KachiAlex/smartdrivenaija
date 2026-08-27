@@ -60,7 +60,7 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
     setIsSubmitting(true);
     try {
       const phone = fullPhone();
-      const result = await registerInit(phone, email.trim(), 'sms');
+      const result = await registerInit(phone, email.trim().toLowerCase(), 'sms');
       if (result._dev_otp) toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
       setStep('verify');
     } catch (err: any) {
@@ -86,7 +86,7 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
     if (otp.length !== 6) { toast.error('Enter the 6-digit code'); return; }
     setIsSubmitting(true);
     try {
-      const result = await registerVerifyOTP(fullPhone(), otp, email.trim() || undefined);
+      const result = await registerVerifyOTP(fullPhone(), otp, email.trim().toLowerCase() || undefined);
       setTempToken(result.tempToken);
       setStep('password');
     } catch (err: any) {
@@ -260,7 +260,7 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
                   type="submit"
                   className="w-full h-12 text-white font-semibold rounded-xl"
                   disabled={isSubmitting || !firstName || !surname || !phoneLocal || !email}
-                  style={{ background: "linear-gradient(135deg, #0C4A6E, #0A1F12)" }}
+                  style={{ background: "linear-gradient(135deg, #15803D, #22C55E)" }}
                 >
                   {isSubmitting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Sending code...</> : 'Send Verification Code →'}
                 </Button>
@@ -294,7 +294,7 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
               <div className="flex gap-3">
                 <Button type="button" variant="outline" className="h-12 px-5 rounded-xl border-2" onClick={() => setStep('details')}>← Back</Button>
                 <motion.div className="flex-1" whileTap={{ scale: 0.98 }}>
-                  <Button type="submit" className="w-full h-12 text-white font-semibold rounded-xl" disabled={isSubmitting || otp.length !== 6} style={{ background: "linear-gradient(135deg, #0C4A6E, #0A1F12)" }}>
+                  <Button type="submit" className="w-full h-12 text-white font-semibold rounded-xl" disabled={isSubmitting || otp.length !== 6} style={{ background: "linear-gradient(135deg, #15803D, #22C55E)" }}>
                     {isSubmitting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Verifying...</> : 'Verify Code →'}
                   </Button>
                 </motion.div>
