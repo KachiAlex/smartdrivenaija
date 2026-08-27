@@ -35,14 +35,14 @@ services:
       JWT_EXPIRES_IN: 24h
       JWT_REFRESH_EXPIRES_IN: 30d
       NODE_ENV: production
-      PORT: 3008
+      PORT: 3012
       TERMII_API_KEY: ${TERMII_API_KEY:-}
       TERMII_SENDER_ID: ${TERMII_SENDER_ID:-SmartDrive}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
       ADMIN_SECRET: ${ADMIN_SECRET:-}
     ports:
-      - "3008:3008"
+      - "3012:3012"
     networks:
       - smartdrive-net
 
