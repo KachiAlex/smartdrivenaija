@@ -1,14 +1,17 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Load .env.local from project root only in development (Vercel injects env vars in production)
 if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: join(__dirname, '..', '..', '..', '.env.local') });
+  const envPath = process.env.DOTENV_CONFIG_PATH
+    ? resolve(process.env.DOTENV_CONFIG_PATH)
+    : join(__dirname, '..', '..', '..', '.env.local');
+  dotenv.config({ path: envPath });
 }
 
 // Validate DATABASE_URL is set
