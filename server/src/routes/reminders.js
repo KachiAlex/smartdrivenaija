@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import { authenticate } from '../middleware/auth.js';
 import pool from '../db/pool.js';
 
 const router = Router();
+router.use(authenticate);
 
 // Get all reminders for a user
 router.get('/', async (req, res) => {
