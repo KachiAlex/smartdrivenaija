@@ -57,6 +57,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const modules = await api.getModules();
       setState(s => ({ ...s, modules }));
+    } catch (err) {
+      console.error('Failed to load modules:', err);
+      setState(s => ({ ...s, modules: [] }));
     } finally {
       setLoading('modules', false);
     }

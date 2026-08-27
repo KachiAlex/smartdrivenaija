@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { motion } from "motion/react";
 import { ModuleCard } from "../components/ModuleCard";
-import { SignpostBig, ShieldCheck, Car, Wrench, AlertTriangle, Heart, Wine, FileCheck } from "lucide-react";
+import { SignpostBig, ShieldCheck, Car, Wrench, AlertTriangle, Heart, Wine, FileCheck, Loader2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 interface ModulesScreenProps {
@@ -20,7 +20,7 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export function ModulesScreen({ onNavigate }: ModulesScreenProps) {
-  const { modules, loadModules } = useApp();
+  const { modules, loadModules, loading } = useApp();
 
   useEffect(() => {
     loadModules();
@@ -67,6 +67,20 @@ export function ModulesScreen({ onNavigate }: ModulesScreenProps) {
       </div>
 
       <div className="p-6 space-y-4 -mt-4">
+        {loading.modules && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-[#15803D] animate-spin" />
+          </div>
+        )}
+
+        {!loading.modules && modules.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <SignpostBig className="w-12 h-12 text-[#15803D]/40 mb-3" />
+            <p className="text-[#14532D] font-semibold" style={{ fontFamily: "Poppins" }}>No modules available yet</p>
+            <p className="text-[#4B7C5F] text-sm mt-1">Please check back later or contact support.</p>
+          </div>
+        )}
+
         {modules.map((mod, index) => (
           <motion.div
             key={mod.id}
