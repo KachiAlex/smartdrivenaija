@@ -1,5 +1,6 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
+import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join, resolve } from 'path';
 
@@ -11,7 +12,15 @@ if (process.env.NODE_ENV !== 'production') {
   const envPath = process.env.DOTENV_CONFIG_PATH
     ? resolve(process.env.DOTENV_CONFIG_PATH)
     : join(__dirname, '..', '..', '..', '.env.local');
-  dotenv.config({ path: envPath });
+  try {
+    const envSource = readFileSync(envPath, 'utf8').replace(/^\uFEFF/, '');
+    const parsed = dotenv.parse(envSource);
+    for (const [key, value] of Object.entries(parsed)) {
+      if (process.env[key] === undefined) process.env[key] = value;
+    }
+  } catch {
+    // .env file missing; rely on real environment variables
+  }
 }
 
 // Validate DATABASE_URL is set
