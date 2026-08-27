@@ -6,9 +6,9 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load .env from project root only in development (Vercel injects env vars in production)
+// Load .env.local from project root only in development (Vercel injects env vars in production)
 if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: join(__dirname, '..', '..', '.env') });
+  dotenv.config({ path: join(__dirname, '..', '..', '..', '.env.local') });
 }
 
 // Validate DATABASE_URL is set

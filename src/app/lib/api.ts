@@ -521,7 +521,7 @@ export class ApiError extends Error {
 // ── Types ────────────────────────────────────────────────────
 export interface User {
   id: string;
-  phone: string;
+  phone: string | null;
   fullName: string | null;
   role: string;
   preferredLanguage: string;

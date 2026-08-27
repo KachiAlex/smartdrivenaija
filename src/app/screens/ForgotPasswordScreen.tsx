@@ -47,7 +47,11 @@ export function ForgotPasswordScreen({ onComplete, onBack }: ForgotPasswordScree
         channel === 'email' ? email.trim().toLowerCase() : undefined,
         channel
       );
-      if (result._dev_otp) toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
+      if (result._dev_otp) {
+        toast.info(`Your reset code is: ${result._dev_otp}`, { duration: 30000 });
+      } else {
+        toast.success(`Reset code sent. Check your ${channel === 'email' ? 'email' : 'phone'}.`, { duration: 8000 });
+      }
       if (cleanPhone) setPhone(cleanPhone);
       setStep('verify');
     } catch (err: any) {

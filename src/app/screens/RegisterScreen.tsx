@@ -61,10 +61,21 @@ export function RegisterScreen({ onComplete, onBack }: RegisterScreenProps) {
     try {
       const phone = fullPhone();
       const result = await registerInit(phone, email.trim().toLowerCase(), 'sms');
-      if (result._dev_otp) toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
+      const actuallySent = result.sentVia && result.sentVia.length > 0 && !result.sentVia.includes('console');
+      if (actuallySent) {
+        toast.success(`Verification code sent via SMS. Check your phone.`, { duration: 8000 });
+      } else if (result._dev_otp) {
+        toast.info(`Your verification code is: ${result._dev_otp}`, { duration: 30000 });
+      } else {
+        toast.warning('Code generated but delivery may be delayed. Please try again.', { duration: 8000 });
+      }
       setStep('verify');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send OTP');
+      if (err.message?.includes('Account already exists') || err.message?.includes('already exists')) {
+        toast.error('An account with this phone or email already exists. Please sign in instead.', { duration: 8000 });
+      } else {
+        toast.error(err.message || 'Failed to send OTP');
+      }
     } finally {
       setIsSubmitting(false);
     }

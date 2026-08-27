@@ -46,11 +46,15 @@ export function LoginScreen({ onLogin, onForgotPassword, onRegister }: LoginScre
       const normalizedIdentifier = identifier.includes('@') ? identifier.trim().toLowerCase() : identifier;
       await login(normalizedIdentifier, password);
     } catch (err: any) {
-      if (err.message?.includes('PASSWORD_NOT_SET') || err.message?.includes('Password not set')) {
-        toast.error('No password set. Use OTP login below.');
+      if (err.code === 'PASSWORD_NOT_SET' || err.message?.includes('Password not set')) {
+        toast.error('No password set for this account. Switching to OTP login — use your email or phone to get a code.', { duration: 6000 });
         setMode('otp');
+      } else if (err.code === 'ACCOUNT_NOT_FOUND' || err.message?.includes('No account found')) {
+        toast.error('No account found with those details. Try creating a new account instead.', { duration: 6000 });
+      } else if (err.code === 'WRONG_PASSWORD' || err.message?.includes('Incorrect password')) {
+        toast.error('Incorrect password. Try again or use OTP login if you forgot it.', { duration: 6000 });
       } else {
-        toast.error(err.message || 'Invalid credentials');
+        toast.error(err.message || 'Sign in failed. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
@@ -75,8 +79,13 @@ export function LoginScreen({ onLogin, onForgotPassword, onRegister }: LoginScre
         otpChannel === 'email' ? email.trim().toLowerCase() : undefined,
         otpChannel
       );
-      if (result._dev_otp) {
-        toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
+      const actuallySent = result.sentVia && result.sentVia.length > 0 && !result.sentVia.includes('console');
+      if (actuallySent) {
+        toast.success(`Verification code sent via ${result.sentVia.join(' + ')}. Check your ${otpChannel === 'email' ? 'email inbox' : 'phone'}.`, { duration: 8000 });
+      } else if (result._dev_otp) {
+        toast.info(`Your verification code is: ${result._dev_otp}`, { duration: 30000 });
+      } else {
+        toast.warning('Code generated but delivery may be delayed. Please try again or contact support.', { duration: 8000 });
       }
       onLogin(cleanPhone, otpChannel === 'email' ? email.trim().toLowerCase() : undefined);
     } catch (err: any) {

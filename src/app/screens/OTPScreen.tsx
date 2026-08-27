@@ -37,9 +37,13 @@ export function OTPScreen({ phoneNumber = "+234 800 000 0000", email, onVerify, 
     setOtp("");
     try {
       const result = await requestOTP(phoneNumber, email, email ? 'email' : 'sms');
-      toast.success('New code sent!');
-      if (result._dev_otp) {
-        toast.info(`Dev OTP: ${result._dev_otp}`, { duration: 15000 });
+      const actuallySent = result.sentVia && result.sentVia.length > 0 && !result.sentVia.includes('console');
+      if (actuallySent) {
+        toast.success(`New code sent via ${result.sentVia.join(' + ')}.`, { duration: 8000 });
+      } else if (result._dev_otp) {
+        toast.info(`Your new verification code is: ${result._dev_otp}`, { duration: 30000 });
+      } else {
+        toast.warning('Code generated but delivery may be delayed.', { duration: 8000 });
       }
     } catch (err: any) {
       toast.error(err.message || 'Failed to resend code');
