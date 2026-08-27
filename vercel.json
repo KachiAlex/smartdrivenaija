@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/index.mjs"
+      "destination": "http://67.211.210.8:8080/api/:path*"
     },
     {
       "source": "/admin",

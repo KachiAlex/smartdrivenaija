@@ -59,7 +59,7 @@ app.use(helmet({
 
 // CORS
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? ['https://smartdrivenaija.com', /\.vercel\.app$/, /\.netlify\.app$/]
+  ? ['https://smartdrivenaija.com', 'https://smartdrivenaija.vercel.app', /\.vercel\.app$/, /\.netlify\.app$/, 'http://67.211.210.8:8080']
   : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', /\.vercel\.app$/, /\.netlify\.app$/];
 
 app.use(cors({
