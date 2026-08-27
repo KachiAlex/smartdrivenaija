@@ -89,7 +89,12 @@ export function QuizScreen({ onNavigate, moduleId }: QuizScreenProps) {
       setIsSubmitting(false);
       setQuizComplete(true);
 
-      if (score >= questions.length * 0.7) {
+      // Use answers.current length for accurate score since state hasn't updated yet
+      const finalScore = answers.current.filter(a => {
+        const q = questions.find(qq => qq.id === a.questionId);
+        return q && a.selected === q.correctAnswer;
+      }).length;
+      if (finalScore >= questions.length * 0.7) {
         confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 } });
       }
     }

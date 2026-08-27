@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Plus,
   Bell,
-  X
+  X,
+  ArrowLeft
 } from "lucide-react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -155,6 +156,13 @@ export function WalletScreen({ onNavigate }: { onNavigate: (screen: string) => v
         />
         
         <div className="relative z-10">
+          <button
+            onClick={() => onNavigate("home")}
+            className="flex items-center gap-2 mb-4 text-white/80 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back to Home</span>
+          </button>
           <h1 className="text-white text-2xl font-bold mb-2" style={{ fontFamily: "Poppins" }}>
             Digital Driver Wallet
           </h1>

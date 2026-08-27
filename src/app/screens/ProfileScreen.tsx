@@ -207,7 +207,7 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-[#0EA5E9] rounded-full transition-all"
+                        className="h-full bg-[#22C55E] rounded-full transition-all"
                         style={{ width: `${driverScore.scoreBreakdown.streak}%` }}
                       />
                     </div>
@@ -368,7 +368,7 @@ export function ProfileScreen({ onNavigate }: { onNavigate?: (screen: string) =>
                       type="submit"
                       className="w-full h-10 text-white text-sm font-semibold rounded-xl"
                       disabled={changingPw || !currentPw || newPw.length < 6 || newPw !== confirmPw}
-                      style={{ background: 'linear-gradient(135deg, #0C4A6E, #0A1F12)' }}
+                      style={{ background: 'linear-gradient(135deg, #15803D, #22C55E)' }}
                     >
                       {changingPw ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : 'Save New Password'}
                     </Button>

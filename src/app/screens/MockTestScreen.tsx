@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Progress } from "../components/ui/progress";
@@ -32,7 +32,7 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
       setTimeRemaining(prev => {
         if (prev <= 1) {
           clearInterval(interval);
-          handleSubmit();
+          handleSubmitRef.current();
           return 0;
         }
         return prev - 1;
@@ -56,7 +56,7 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!currentMockTest || isSubmitting) return;
     setIsSubmitting(true);
 
@@ -75,7 +75,13 @@ export function MockTestScreen({ onNavigate }: MockTestScreenProps) {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [currentMockTest, isSubmitting, answers, questions, submitMockTest, onNavigate]);
+
+  // Keep a ref to handleSubmit so the timer always calls the latest version
+  const handleSubmitRef = useRef(handleSubmit);
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  }, [handleSubmit]);
 
   if (!hasStarted) {
     return (

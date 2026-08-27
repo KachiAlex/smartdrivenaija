@@ -20,7 +20,7 @@ export function Logo({ className = "", size = 120 }: { className?: string; size?
         </linearGradient>
         <linearGradient id="roadGrad" x1="0" y1="80" x2="200" y2="150">
           <stop offset="0%" stopColor="#15803D" />
-          <stop offset="50%" stopColor="#0C4A6E" />
+          <stop offset="50%" stopColor="#22C55E" />
           <stop offset="100%" stopColor="#14532D" />
         </linearGradient>
         <filter id="glow">
@@ -64,8 +64,8 @@ export function Logo({ className = "", size = 120 }: { className?: string; size?
       </motion.g>
 
       {/* Road */}
-      <path d="M30 100 L170 100 L100 190 Z" fill="#0C4A6E" />
-      <path d="M50 100 L150 100 L100 170 Z" fill="#0EA5E9" opacity="0.6" />
+      <path d="M30 100 L170 100 L100 190 Z" fill="#14532D" />
+      <path d="M50 100 L150 100 L100 170 Z" fill="#22C55E" opacity="0.6" />
       {/* Road center line */}
       <line x1="100" y1="100" x2="100" y2="180" stroke="#FFFFFF" strokeWidth="2" strokeDasharray="6 6" />
 
@@ -76,14 +76,14 @@ export function Logo({ className = "", size = 120 }: { className?: string; size?
       >
         <path
           d="M145 55 C145 45 137 38 128 38 C119 38 111 45 111 55 C111 65 128 82 128 82 C128 82 145 65 145 55Z"
-          fill="#38BDF8"
-          stroke="#0C4A6E"
+          fill="#22C55E"
+          stroke="#14532D"
           strokeWidth="1.5"
         />
-        <circle cx="128" cy="54" r="6" fill="#0C4A6E" />
+        <circle cx="128" cy="54" r="6" fill="#14532D" />
         <motion.path
           d="M124 52 L128 56 L134 50"
-          stroke="#0C4A6E"
+          stroke="#14532D"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -96,7 +96,7 @@ export function Logo({ className = "", size = 120 }: { className?: string; size?
       {/* Book / open pages */}
       <path d="M60 115 L100 100 L100 165 L60 150 Z" fill="#FFFFFF" />
       <path d="M100 100 L140 115 L140 150 L100 165 Z" fill="#F0FDF4" />
-      <path d="M60 115 L100 100 L140 115" stroke="#0C4A6E" strokeWidth="1.5" fill="none" />
+      <path d="M60 115 L100 100 L140 115" stroke="#14532D" strokeWidth="1.5" fill="none" />
 
       {/* Steering wheel */}
       <motion.g
@@ -104,14 +104,14 @@ export function Logo({ className = "", size = 120 }: { className?: string; size?
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         style={{ transformOrigin: "100px 135px" }}
       >
-        <circle cx="100" cy="135" r="22" stroke="#0C4A6E" strokeWidth="3" fill="none" />
-        <circle cx="100" cy="135" r="8" stroke="#0C4A6E" strokeWidth="2.5" fill="none" />
-        <line x1="100" y1="113" x2="100" y2="127" stroke="#0C4A6E" strokeWidth="2.5" />
-        <line x1="100" y1="143" x2="100" y2="157" stroke="#0C4A6E" strokeWidth="2.5" />
-        <line x1="78" y1="135" x2="92" y2="135" stroke="#0C4A6E" strokeWidth="2.5" />
-        <line x1="108" y1="135" x2="122" y2="135" stroke="#0C4A6E" strokeWidth="2.5" />
+        <circle cx="100" cy="135" r="22" stroke="#14532D" strokeWidth="3" fill="none" />
+        <circle cx="100" cy="135" r="8" stroke="#14532D" strokeWidth="2.5" fill="none" />
+        <line x1="100" y1="113" x2="100" y2="127" stroke="#14532D" strokeWidth="2.5" />
+        <line x1="100" y1="143" x2="100" y2="157" stroke="#14532D" strokeWidth="2.5" />
+        <line x1="78" y1="135" x2="92" y2="135" stroke="#14532D" strokeWidth="2.5" />
+        <line x1="108" y1="135" x2="122" y2="135" stroke="#14532D" strokeWidth="2.5" />
         {/* Center dot */}
-        <circle cx="100" cy="135" r="3" fill="#0C4A6E" />
+        <circle cx="100" cy="135" r="3" fill="#14532D" />
       </motion.g>
 
       {/* Bottom red accent */}

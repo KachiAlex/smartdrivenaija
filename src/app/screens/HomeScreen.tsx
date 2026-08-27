@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { ProgressCircle } from "../components/ProgressCircle";
 
 import { Badge } from "../components/ui/badge";
-import { Flame, Zap, BookOpen, PlayCircle, Trophy, TrendingUp } from "lucide-react";
+import { Flame, Zap, BookOpen, PlayCircle, Trophy, TrendingUp, AlertTriangle, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
 import { AnimatedCounter } from "../components/AnimatedCounter";
@@ -265,14 +265,14 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               whileTap={{ scale: 0.97 }}
               className="perspective-card"
             >
-              <Card className="p-4 cursor-pointer glass-card border-[#0EA5E9]/10 hover:border-[#0EA5E9]/30 hover:shadow-xl hover:shadow-[#0EA5E9]/10 transition-all" onClick={() => onNavigate("leaderboard")}>
+              <Card className="p-4 cursor-pointer glass-card border-[#15803D]/10 hover:border-[#15803D]/30 hover:shadow-xl hover:shadow-[#15803D]/10 transition-all" onClick={() => onNavigate("leaderboard")}>
                 <div className="flex flex-col items-center text-center gap-3">
                   <motion.div
                     whileHover={{ rotate: [0, -10, 10, 0] }}
                     transition={{ duration: 0.4 }}
-                    className="p-3 rounded-xl bg-gradient-to-br from-[#0EA5E9]/20 to-[#38BDF8]/10"
+                    className="p-3 rounded-xl bg-gradient-to-br from-[#15803D]/20 to-[#22C55E]/10"
                   >
-                    <Trophy className="w-8 h-8 text-[#0EA5E9]" />
+                    <Trophy className="w-8 h-8 text-[#15803D]" />
                   </motion.div>
                   <div>
                     <h4 className="font-semibold text-[#14532D]">Leaderboard</h4>
@@ -292,9 +292,9 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             transition={{ delay: 0.5 }}
           >
             <h3 className="mb-4 text-[#14532D] font-bold">Recent Achievements</h3>
-            <Card className="p-4 glass-card border-[#0EA5E9]/10">
+            <Card className="p-4 glass-card border-[#15803D]/10">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-[#0EA5E9] to-[#38BDF8]">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-[#15803D] to-[#22C55E]">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
