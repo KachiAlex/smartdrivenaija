@@ -26,6 +26,7 @@ import { RegisterScreen } from "./screens/RegisterScreen";
 import { ForgotPasswordScreen } from "./screens/ForgotPasswordScreen";
 import { SessionScreen } from "./screens/SessionScreen";
 import { TestOutcomeScreen } from "./screens/TestOutcomeScreen";
+import { ScheduleScreen } from "./screens/ScheduleScreen";
 import { BottomNav } from "./components/BottomNav";
 import { Toaster } from "./components/ui/sonner";
 
@@ -52,7 +53,8 @@ type Screen =
   | "emergency"
   | "first-aid"
   | "session"
-  | "test-outcome";
+  | "test-outcome"
+  | "schedule";
 
 function AppContent() {
   const { isAuthenticated, isLoading, user, isNewUser } = useAuth();
@@ -225,6 +227,7 @@ function AppContent() {
       {currentScreen === "leaderboard" && <LeaderboardScreen onNavigate={navigate} />}
       {currentScreen === "session" && <SessionScreen onNavigate={navigate} />}
       {currentScreen === "test-outcome" && <TestOutcomeScreen onNavigate={navigate} />}
+      {currentScreen === "schedule" && <ScheduleScreen onNavigate={navigate} />}
 
       {showBottomNav && <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />}
 

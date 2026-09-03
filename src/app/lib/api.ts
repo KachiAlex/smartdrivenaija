@@ -296,6 +296,22 @@ class ApiClient {
     return this.request<{ shouldPrompt: boolean; testDate?: string; testOutcome?: string; daysSinceTest?: number }>('/session/test-outcome/prompt');
   }
 
+  // ── Schedule ──────────────────────────────────────────────
+  async getSchedule() {
+    return this.request<ScheduleInfo>('/schedule');
+  }
+
+  async getNotificationSettings() {
+    return this.request<NotificationSettings>('/schedule/notifications');
+  }
+
+  async updateNotificationPreferences(prefs: { enabled?: boolean; push?: boolean; sms?: boolean; email?: boolean }) {
+    return this.request<{ message: string; preferences: Record<string, boolean> }>('/schedule/notifications', {
+      method: 'PUT',
+      body: JSON.stringify(prefs),
+    });
+  }
+
   // ── Modules ───────────────────────────────────────────────
   async getModules() {
     return this.request<Module[]>('/modules');
@@ -1045,6 +1061,67 @@ export interface RetakePlanItem {
   topicTag: string;
   mastery: number;
   questionsToFocus: number;
+}
+
+export interface ScheduleMilestone {
+  week: number;
+  daysRemaining: number;
+  targetReadiness: number;
+  focus: 'new_content' | 'weak_topics' | 'mock_tests';
+}
+
+export interface ScheduleInfo {
+  hasSchedule: boolean;
+  testDate?: string;
+  daysToTest?: number;
+  phase?: 'foundation' | 'intensive' | 'cram';
+  readinessScore?: number | null;
+  targetReadiness?: number;
+  readinessGap?: number;
+  sessionsToTarget?: number;
+  totalSessions?: number;
+  sessionsPerWeek?: number;
+  weakTopics?: { topicTag: string; mastery: number; priority: string }[];
+  mediumTopics?: { topicTag: string; mastery: number; priority: string }[];
+  notificationCadence?: {
+    frequency: string;
+    time?: string;
+    times?: string[];
+    tone: string;
+    message: string;
+  };
+  milestones?: ScheduleMilestone[];
+  todayPlan?: {
+    day: number;
+    phase: string;
+    sessionAvailable: boolean;
+    focus: string;
+    weakTopics: string[];
+    estimatedDuration: number;
+  };
+  streakCurrent?: number;
+  message?: string;
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  cadence: {
+    frequency: string;
+    time?: string;
+    times?: string[];
+    label: string;
+  };
+  channels: {
+    sms: boolean;
+    email: boolean;
+    push: boolean;
+  };
+  daysToTest?: number;
+  nextReminder?: {
+    type: string;
+    scheduledFor: string;
+  } | null;
+  message?: string;
 }
 
 // Singleton instance

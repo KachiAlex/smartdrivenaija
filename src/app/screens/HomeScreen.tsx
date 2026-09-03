@@ -93,10 +93,22 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                     : "Keep studying — you'll get there."}
                 </p>
                 {daysToTest !== null && daysToTest > 0 && (
-                  <p className="text-white/60 text-xs mt-1 flex items-center gap-1">
+                  <button
+                    onClick={() => onNavigate("schedule")}
+                    className="text-white/60 text-xs mt-1 flex items-center gap-1 hover:text-white/90 transition-colors"
+                  >
                     <Calendar className="w-3 h-3" />
-                    {daysToTest} day{daysToTest !== 1 ? 's' : ''} to your test
-                  </p>
+                    {daysToTest} day{daysToTest !== 1 ? 's' : ''} to your test — View schedule
+                  </button>
+                )}
+                {daysToTest === null && (
+                  <button
+                    onClick={() => onNavigate("schedule")}
+                    className="text-white/60 text-xs mt-1 flex items-center gap-1 hover:text-white/90 transition-colors"
+                  >
+                    <Calendar className="w-3 h-3" />
+                    Set your test date for a study schedule
+                  </button>
                 )}
               </div>
               <motion.div
