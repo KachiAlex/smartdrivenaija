@@ -76,6 +76,46 @@ export interface Question {
   created_at: string;
 }
 
+export interface Test {
+  id: number;
+  title: string;
+  description: string | null;
+  module_id: number | null;
+  module_title?: string;
+  topic_tag: string | null;
+  question_count: number;
+  actual_question_count?: number;
+  time_limit_minutes: number;
+  pass_mark: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TestDetail extends Test {
+  questions: (Question & { sort_order: number })[];
+}
+
+export interface ParsedQuestion {
+  row: number;
+  module_id: number | null;
+  topic_tag: string;
+  question_en: string;
+  options_en: string[];
+  correct_answer: number;
+  explanation_en: string | null;
+  difficulty: number;
+  is_mock_test_eligible: boolean;
+  question_type: string;
+}
+
+export interface UploadPreviewResult {
+  parsed: ParsedQuestion[];
+  errors: { row: number; error: string }[];
+  totalRows: number;
+  validCount: number;
+}
+
 export interface Pagination {
   page: number;
   limit: number;
@@ -164,4 +204,46 @@ export const api = {
 
   bulkImportQuestions: (token: string, questions: Partial<Question>[]) =>
     req<{ message: string; inserted: number }>(`${BASE}/content/questions/bulk`, { method: 'POST', headers: headers(token), body: JSON.stringify({ questions }) }),
+
+  // ── Tests ────────────────────────────────────────────────────────────────
+  getTests: (token: string) =>
+    req<Test[]>(`${BASE}/content/tests`, { headers: headers(token) }),
+
+  getTest: (token: string, id: number) =>
+    req<TestDetail>(`${BASE}/content/tests/${id}`, { headers: headers(token) }),
+
+  createTest: (token: string, body: Partial<Test>) =>
+    req<Test>(`${BASE}/content/tests`, { method: 'POST', headers: headers(token), body: JSON.stringify(body) }),
+
+  updateTest: (token: string, id: number, body: Partial<Test>) =>
+    req<Test>(`${BASE}/content/tests/${id}`, { method: 'PATCH', headers: headers(token), body: JSON.stringify(body) }),
+
+  deleteTest: (token: string, id: number) =>
+    req<{ message: string }>(`${BASE}/content/tests/${id}`, { method: 'DELETE', headers: headers(token) }),
+
+  attachQuestions: (token: string, testId: number, questionIds: number[]) =>
+    req<{ message: string; added: number }>(`${BASE}/content/tests/${testId}/questions`, { method: 'POST', headers: headers(token), body: JSON.stringify({ question_ids: questionIds }) }),
+
+  removeTestQuestion: (token: string, testId: number, questionId: number) =>
+    req<{ message: string }>(`${BASE}/content/tests/${testId}/questions/${questionId}`, { method: 'DELETE', headers: headers(token) }),
+
+  // ── File Upload ──────────────────────────────────────────────────────────
+  uploadPreview: (token: string, file: File, defaultModuleId?: number, defaultTopicTag?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (defaultModuleId) formData.append('default_module_id', String(defaultModuleId));
+    if (defaultTopicTag) formData.append('default_topic_tag', defaultTopicTag);
+    return req<UploadPreviewResult>(`${BASE}/content/questions/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+  },
+
+  confirmImport: (token: string, questions: ParsedQuestion[], testId?: number) =>
+    req<{ message: string; inserted: number; question_ids: number[] }>(`${BASE}/content/questions/confirm-import`, {
+      method: 'POST',
+      headers: headers(token),
+      body: JSON.stringify({ questions, test_id: testId }),
+    }),
 };

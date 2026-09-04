@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
 import pool from '../db/pool.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 
 const router = Router();
 const BCRYPT_ROUNDS = 12;
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ── Auth helpers ─────────────────────────────────────────────────────────────
 
@@ -487,6 +490,303 @@ router.post('/content/questions/bulk', ...adminAuth, async (req, res, next) => {
       }
       await client.query('COMMIT');
       res.status(201).json({ message: `${inserted} question(s) imported`, inserted });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally { client.release(); }
+  } catch (err) { next(err); }
+});
+
+// ============================================================================
+// TESTS — CRUD
+// ============================================================================
+
+// GET /admin/content/tests
+router.get('/content/tests', ...adminAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(`
+      SELECT t.*,
+             m.title_en as module_title,
+             (SELECT COUNT(*) FROM test_questions tq WHERE tq.test_id = t.id) as actual_question_count
+      FROM tests t
+      LEFT JOIN modules m ON m.id = t.module_id
+      ORDER BY t.created_at DESC
+    `);
+    res.json(result.rows);
+  } catch (err) { next(err); }
+});
+
+// GET /admin/content/tests/:id
+router.get('/content/tests/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const testResult = await pool.query(`
+      SELECT t.*, m.title_en as module_title
+      FROM tests t
+      LEFT JOIN modules m ON m.id = t.module_id
+      WHERE t.id = $1
+    `, [req.params.id]);
+
+    if (testResult.rows.length === 0) return res.status(404).json({ error: 'Test not found' });
+
+    const questionsResult = await pool.query(`
+      SELECT q.id, q.module_id, q.topic_tag, q.question_type, q.question_en,
+             q.options_en, q.correct_answer, q.explanation_en, q.difficulty,
+             q.is_mock_test_eligible, tq.sort_order
+      FROM test_questions tq
+      JOIN questions q ON q.id = tq.question_id
+      WHERE tq.test_id = $1
+      ORDER BY tq.sort_order
+    `, [req.params.id]);
+
+    res.json({ ...testResult.rows[0], questions: questionsResult.rows });
+  } catch (err) { next(err); }
+});
+
+// POST /admin/content/tests
+router.post('/content/tests', ...adminAuth, async (req, res, next) => {
+  try {
+    const { title, description, module_id, topic_tag, time_limit_minutes, pass_mark, is_active } = req.body;
+    if (!title) return res.status(400).json({ error: 'title is required' });
+
+    const result = await pool.query(
+      `INSERT INTO tests (title, description, module_id, topic_tag, time_limit_minutes, pass_mark, is_active, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      [title, description || null, module_id || null, topic_tag || null,
+       time_limit_minutes || 30, pass_mark || 70, is_active !== false, req.user.id]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) { next(err); }
+});
+
+// PATCH /admin/content/tests/:id
+router.patch('/content/tests/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const { title, description, module_id, topic_tag, time_limit_minutes, pass_mark, is_active } = req.body;
+    const result = await pool.query(
+      `UPDATE tests SET
+        title = COALESCE($1, title),
+        description = COALESCE($2, description),
+        module_id = COALESCE($3, module_id),
+        topic_tag = COALESCE($4, topic_tag),
+        time_limit_minutes = COALESCE($5, time_limit_minutes),
+        pass_mark = COALESCE($6, pass_mark),
+        is_active = COALESCE($7, is_active)
+       WHERE id = $8 RETURNING *`,
+      [title || null, description || null, module_id || null, topic_tag || null,
+       time_limit_minutes || null, pass_mark || null,
+       is_active !== undefined ? is_active : null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Test not found' });
+    res.json(result.rows[0]);
+  } catch (err) { next(err); }
+});
+
+// DELETE /admin/content/tests/:id
+router.delete('/content/tests/:id', ...adminAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(`DELETE FROM tests WHERE id = $1 RETURNING id`, [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Test not found' });
+    res.json({ message: 'Test deleted' });
+  } catch (err) { next(err); }
+});
+
+// POST /admin/content/tests/:id/questions — attach questions to a test
+router.post('/content/tests/:id/questions', ...adminAuth, async (req, res, next) => {
+  try {
+    const { question_ids } = req.body;
+    if (!Array.isArray(question_ids) || question_ids.length === 0) {
+      return res.status(400).json({ error: 'question_ids array required' });
+    }
+
+    const testExists = await pool.query(`SELECT id FROM tests WHERE id = $1`, [req.params.id]);
+    if (testExists.rows.length === 0) return res.status(404).json({ error: 'Test not found' });
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      let added = 0;
+      for (let i = 0; i < question_ids.length; i++) {
+        const qid = question_ids[i];
+        await client.query(
+          `INSERT INTO test_questions (test_id, question_id, sort_order)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (test_id, question_id) DO NOTHING`,
+          [req.params.id, qid, i]
+        );
+        added++;
+      }
+      await client.query(
+        `UPDATE tests SET question_count = (SELECT COUNT(*) FROM test_questions WHERE test_id = $1) WHERE id = $1`,
+        [req.params.id]
+      );
+      await client.query('COMMIT');
+      res.json({ message: `${added} question(s) attached to test`, added });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally { client.release(); }
+  } catch (err) { next(err); }
+});
+
+// DELETE /admin/content/tests/:id/questions/:questionId — remove a question from a test
+router.delete('/content/tests/:id/questions/:questionId', ...adminAuth, async (req, res, next) => {
+  try {
+    await pool.query(
+      `DELETE FROM test_questions WHERE test_id = $1 AND question_id = $2`,
+      [req.params.id, req.params.questionId]
+    );
+    await pool.query(
+      `UPDATE tests SET question_count = (SELECT COUNT(*) FROM test_questions WHERE test_id = $1) WHERE id = $1`,
+      [req.params.id]
+    );
+    res.json({ message: 'Question removed from test' });
+  } catch (err) { next(err); }
+});
+
+// ============================================================================
+// FILE UPLOAD — Parse Excel/CSV and return preview (no DB insert)
+// ============================================================================
+
+// POST /admin/content/questions/upload — parse file, return preview rows
+router.post('/content/questions/upload', ...adminAuth, upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const XLSX = (await import('xlsx')).default;
+    const buf = req.file.buffer;
+    const workbook = XLSX.read(buf, { type: 'buffer' });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(worksheet);
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: 'File is empty or has invalid format' });
+    }
+
+    const defaultModuleId = req.body.default_module_id ? parseInt(req.body.default_module_id) : null;
+    const defaultTopicTag = req.body.default_topic_tag || null;
+
+    const parsed = [];
+    const errors = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowNum = i + 2;
+
+      // Parse options
+      let options = [];
+      if (row.options) {
+        options = String(row.options).split(',').map(o => o.trim()).filter(Boolean);
+      } else if (row['Option A'] || row['Option B']) {
+        options = [row['Option A'], row['Option B'], row['Option C'], row['Option D']].filter(Boolean);
+      } else if (row.option_a || row.option_b) {
+        options = [row.option_a, row.option_b, row.option_c, row.option_d].filter(Boolean);
+      }
+
+      if (options.length < 2) {
+        errors.push({ row: rowNum, error: `At least 2 options required. Columns found: ${Object.keys(row).join(', ')}` });
+        continue;
+      }
+
+      // Parse correct answer
+      let correctAnswer;
+      if (row.Answer !== undefined) {
+        const ans = String(row.Answer).trim().toUpperCase();
+        if (ans.length === 1 && ans >= 'A' && ans <= 'Z') {
+          correctAnswer = ans.charCodeAt(0) - 65;
+        } else {
+          correctAnswer = parseInt(ans, 10);
+        }
+      } else {
+        correctAnswer = parseInt(String(row.correct_answer), 10);
+      }
+
+      if (isNaN(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) {
+        errors.push({ row: rowNum, error: `Answer must be A-${String.fromCharCode(65 + options.length - 1)} or 0-${options.length - 1}` });
+        continue;
+      }
+
+      const questionText = String(row.question || row.question_en || row.Question || '').trim();
+      if (!questionText) {
+        errors.push({ row: rowNum, error: 'Question text is empty' });
+        continue;
+      }
+
+      parsed.push({
+        row: rowNum,
+        module_id: row.module_id ? parseInt(String(row.module_id), 10) : defaultModuleId,
+        topic_tag: String(row.topic_tag || defaultTopicTag || 'general'),
+        question_en: questionText,
+        options_en: options,
+        correct_answer: correctAnswer,
+        explanation_en: String(row.explanation || row.explanation_en || '').trim() || null,
+        difficulty: parseInt(String(row.difficulty), 10) || 1,
+        is_mock_test_eligible: row.is_mock_test_eligible === true || row.is_mock_test_eligible === 'true' || row.is_mock_test_eligible === 1 || row.is_mock_test_eligible === undefined,
+        question_type: String(row.question_type || 'multiple_choice'),
+      });
+    }
+
+    res.json({ parsed, errors, totalRows: rows.length, validCount: parsed.length });
+  } catch (err) {
+    console.error('Upload parse error:', err);
+    next(err);
+  }
+});
+
+// POST /admin/content/questions/confirm-import — insert previewed questions
+router.post('/content/questions/confirm-import', ...adminAuth, async (req, res, next) => {
+  try {
+    const { questions, test_id } = req.body;
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ error: 'questions array required' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const insertedIds = [];
+      let inserted = 0;
+
+      for (const q of questions) {
+        if (!q.module_id || !q.question_en || !q.options_en || q.correct_answer === undefined || !q.topic_tag) continue;
+        const result = await client.query(
+          `INSERT INTO questions
+            (module_id, lesson_id, topic_tag, question_type, question_en, options_en,
+             correct_answer, explanation_en, difficulty, is_mock_test_eligible)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+          [
+            q.module_id, q.lesson_id || null, q.topic_tag,
+            q.question_type || 'multiple_choice',
+            q.question_en, JSON.stringify(q.options_en),
+            q.correct_answer, q.explanation_en || null,
+            q.difficulty || 1, q.is_mock_test_eligible !== false
+          ]
+        );
+        if (result.rows[0]) insertedIds.push(result.rows[0].id);
+        inserted++;
+      }
+
+      // If test_id provided, attach all imported questions to the test
+      if (test_id && insertedIds.length > 0) {
+        for (let i = 0; i < insertedIds.length; i++) {
+          await client.query(
+            `INSERT INTO test_questions (test_id, question_id, sort_order)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (test_id, question_id) DO NOTHING`,
+            [test_id, insertedIds[i], i]
+          );
+        }
+        await client.query(
+          `UPDATE tests SET question_count = (SELECT COUNT(*) FROM test_questions WHERE test_id = $1) WHERE id = $1`,
+          [test_id]
+        );
+      }
+
+      await client.query('COMMIT');
+      res.status(201).json({
+        message: `${inserted} question(s) imported${test_id ? ' and attached to test' : ''}`,
+        inserted,
+        question_ids: insertedIds,
+      });
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;

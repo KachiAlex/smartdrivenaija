@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'motion/react';
-import { api, type Module, type Question, type Pagination } from './api';
+import { api, type Module, type Question, type Pagination, type Test, type TestDetail, type ParsedQuestion, type UploadPreviewResult } from './api';
 import * as XLSX from 'xlsx';
 
 // ── Difficulty badge ──────────────────────────────────────────────────────────
@@ -255,93 +255,61 @@ function ModuleModal({ token, initial, onClose, onSaved }: { token: string; init
   );
 }
 
-// ── Bulk import modal (Excel + JSON) ──────────────────────────────────────────
-function BulkImportModal({ token, modules, onClose, onImported }: { token: string; modules: Module[]; onClose: () => void; onImported: () => void }) {
+// ── Bulk import modal (Server-side Excel upload with preview + JSON) ──────────
+function BulkImportModal({ token, modules, onClose, onImported, tests, preselectedTestId }: { token: string; modules: Module[]; onClose: () => void; onImported: () => void; tests?: Test[]; preselectedTestId?: number }) {
   const [json, setJson] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState('');
-  const [importMode, setImportMode] = useState<'json' | 'excel'>('excel');
+  const [importMode, setImportMode] = useState<'excel' | 'json'>('excel');
+  const [preview, setPreview] = useState<UploadPreviewResult | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [attachTestId, setAttachTestId] = useState<number | ''>(preselectedTestId || '');
+  const [defaultModule, setDefaultModule] = useState<number | ''>('');
+  const [defaultTopic, setDefaultTopic] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImport = async () => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(''); setResult(''); setPreview(null);
+    setSelectedFile(file);
+    setSaving(true);
+    try {
+      const r = await api.uploadPreview(token, file, defaultModule || undefined, defaultTopic || undefined);
+      setPreview(r);
+      if (r.errors.length > 0) {
+        setError(`${r.errors.length} row(s) had errors. ${r.validCount} valid question(s) ready to import.`);
+      }
+    } catch (e: any) { setError(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!preview || preview.parsed.length === 0) return;
+    setSaving(true); setError(''); setResult('');
+    try {
+      const r = await api.confirmImport(token, preview.parsed, attachTestId || undefined);
+      setResult(r.message);
+      onImported();
+      setPreview(null);
+      setSelectedFile(null);
+    } catch (e: any) { setError(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleJsonImport = async () => {
     setError(''); setResult('');
     let parsed: any[];
     try { parsed = JSON.parse(json); } catch { setError('Invalid JSON'); return; }
     if (!Array.isArray(parsed)) { setError('Must be a JSON array'); return; }
     setSaving(true);
     try {
-      const r = await api.bulkImportQuestions(token, parsed);
+      const r = await api.confirmImport(token, parsed as ParsedQuestion[], attachTestId || undefined);
       setResult(r.message);
       onImported();
     } catch (e: any) { setError(e.message); }
     finally { setSaving(false); }
-  };
-
-  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setError('');
-    setSaving(true);
-    try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      if (!Array.isArray(jsonData) || jsonData.length === 0) {
-        setError('Excel file is empty or has invalid format');
-        setSaving(false);
-        return;
-      }
-      const questions = jsonData.map((row: any, index: number) => {
-        let options: string[] = [];
-        if (row.options) {
-          // Comma-separated format
-          options = String(row.options).split(',').map((o: string) => o.trim()).filter(Boolean);
-        } else if (row['Option A'] || row['Option B']) {
-          // Simple spaced-column format: Option A, Option B, Option C, Option D
-          options = [row['Option A'], row['Option B'], row['Option C'], row['Option D']].filter(Boolean);
-        } else if (row.option_a || row.option_b) {
-          // Underscore format
-          options = [row.option_a, row.option_b, row.option_c, row.option_d].filter(Boolean);
-        }
-        if (options.length < 2) {
-          throw new Error(`Row ${index + 2}: At least 2 options required. Found columns: ${Object.keys(row).join(', ')}`);
-        }
-        // Support "Answer" or "correct_answer" column
-        let correctAnswer: number;
-        if (row.Answer !== undefined) {
-          const ans = String(row.Answer).trim().toUpperCase();
-          if (ans.length === 1 && ans >= 'A' && ans <= 'D') {
-            correctAnswer = ans.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
-          } else {
-            correctAnswer = parseInt(ans, 10);
-          }
-        } else {
-          correctAnswer = parseInt(String(row.correct_answer), 10);
-        }
-        if (isNaN(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) {
-          throw new Error(`Row ${index + 2}: Answer must be A, B, C, D or 0-${options.length - 1}`);
-        }
-        return {
-          module_id: row.module_id ? parseInt(String(row.module_id), 10) : (modules[0]?.id ?? 1),
-          topic_tag: String(row.topic_tag || 'general'),
-          question_en: String(row.question || row.question_en || row.Question || ''),
-          options_en: options,
-          correct_answer: correctAnswer,
-          explanation_en: String(row.explanation || row.explanation_en || ''),
-          difficulty: parseInt(String(row.difficulty), 10) || 1,
-          is_mock_test_eligible: row.is_mock_test_eligible === true || row.is_mock_test_eligible === 'true' || row.is_mock_test_eligible === 1,
-          question_type: String(row.question_type || 'multiple_choice'),
-        };
-      });
-      const r = await api.bulkImportQuestions(token, questions);
-      setResult(`${r.message} (${questions.length} questions)`);
-      onImported();
-    } catch (e: any) {
-      setError(e.message || 'Failed to parse Excel file');
-    } finally {
-      setSaving(false);
-    }
   };
 
   const downloadSampleExcel = (simpleFormat: boolean = false) => {
@@ -377,16 +345,6 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
         difficulty: 1,
         is_mock_test_eligible: 1,
         question_type: 'multiple_choice',
-      }, {
-        module_id: modules[0]?.id ?? 1,
-        topic_tag: 'speed_limits',
-        question: 'What is the speed limit in a residential area?',
-        options: '30 km/h,50 km/h,60 km/h,80 km/h',
-        correct_answer: 1,
-        explanation: 'Standard speed limit in residential areas is 50 km/h.',
-        difficulty: 2,
-        is_mock_test_eligible: 1,
-        question_type: 'multiple_choice',
       }];
       const worksheet = XLSX.utils.json_to_sheet(sampleData);
       const workbook = XLSX.utils.book_new();
@@ -409,7 +367,7 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
         <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
           <h2 className="text-base font-bold text-gray-800">Bulk Import Questions</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
@@ -419,6 +377,17 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
             <button onClick={() => setImportMode('excel')} className={`flex-1 py-2 px-3 rounded-md text-sm font-semibold transition-colors ${importMode === 'excel' ? 'bg-white text-[#E63946] shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}>Excel Upload</button>
             <button onClick={() => setImportMode('json')} className={`flex-1 py-2 px-3 rounded-md text-sm font-semibold transition-colors ${importMode === 'json' ? 'bg-white text-[#E63946] shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}>JSON Paste</button>
           </div>
+
+          {/* Optional: attach to test */}
+          {tests && tests.length > 0 && (
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3">
+              <label className="block text-xs font-semibold text-purple-700 uppercase tracking-wide mb-1">Attach to Test (optional)</label>
+              <select value={attachTestId} onChange={e => setAttachTestId(e.target.value ? parseInt(e.target.value) : '')} className="w-full border-2 border-purple-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-purple-500 outline-none">
+                <option value="">— No test, just import to pool —</option>
+                {tests.map(t => <option key={t.id} value={t.id}>{t.title} ({t.actual_question_count ?? t.question_count} questions)</option>)}
+              </select>
+            </div>
+          )}
 
           {importMode === 'excel' ? (
             <div className="space-y-4">
@@ -455,14 +424,76 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
                   </button>
                 </div>
               </div>
+
+              {/* Default module/topic for rows that don't specify */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Default Module (if not in file)</label>
+                  <select value={defaultModule} onChange={e => setDefaultModule(e.target.value ? parseInt(e.target.value) : '')} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-[#E63946] outline-none">
+                    <option value="">From file / fallback</option>
+                    {modules.map(m => <option key={m.id} value={m.id}>{m.icon} {m.title_en}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Default Topic Tag</label>
+                  <input type="text" value={defaultTopic} onChange={e => setDefaultTopic(e.target.value)} placeholder="e.g. road-signs" className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-[#E63946] outline-none" />
+                </div>
+              </div>
+
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#E63946] transition-colors">
-                <input type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelUpload} disabled={saving} className="hidden" id="excel-upload" />
+                <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileSelect} disabled={saving} className="hidden" id="excel-upload" />
                 <label htmlFor="excel-upload" className="cursor-pointer flex flex-col items-center gap-2">
                   <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                  <span className="text-sm font-medium text-gray-600">Click to upload Excel file</span>
+                  <span className="text-sm font-medium text-gray-600">{selectedFile ? selectedFile.name : 'Click to upload Excel file'}</span>
                   <span className="text-xs text-gray-400">.xlsx, .xls, or .csv</span>
                 </label>
               </div>
+
+              {/* Preview table */}
+              {preview && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-gray-800">Preview ({preview.validCount} valid / {preview.totalRows} total)</h3>
+                    <button onClick={() => { setPreview(null); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="text-xs text-gray-400 hover:text-gray-600">Clear</button>
+                  </div>
+                  {preview.errors.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 max-h-32 overflow-y-auto">
+                      <p className="text-xs font-semibold text-red-600 mb-1">Errors ({preview.errors.length}):</p>
+                      {preview.errors.slice(0, 10).map((e, i) => (
+                        <p key={i} className="text-xs text-red-500">Row {e.row}: {e.error}</p>
+                      ))}
+                      {preview.errors.length > 10 && <p className="text-xs text-red-400 mt-1">...and {preview.errors.length - 10} more</p>}
+                    </div>
+                  )}
+                  {preview.parsed.length > 0 && (
+                    <div className="border border-gray-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-50 sticky top-0">
+                          <tr>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-400">#</th>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-400">Question</th>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-400">Options</th>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-400">Ans</th>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-400">Topic</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {preview.parsed.slice(0, 50).map((q, i) => (
+                            <tr key={i} className="border-b border-gray-50">
+                              <td className="px-3 py-2 text-gray-400">{i + 1}</td>
+                              <td className="px-3 py-2 text-gray-700 max-w-xs truncate">{q.question_en}</td>
+                              <td className="px-3 py-2 text-gray-500">{q.options_en.length} opts</td>
+                              <td className="px-3 py-2"><span className="text-green-600 font-semibold">{String.fromCharCode(65 + q.correct_answer)}</span></td>
+                              <td className="px-3 py-2 text-gray-500">{q.topic_tag}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {preview.parsed.length > 50 && <p className="text-xs text-gray-400 p-2 text-center">...showing 50 of {preview.parsed.length}</p>}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -476,8 +507,13 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
         </div>
         <div className="px-6 py-4 border-t flex gap-3 shrink-0">
           <button onClick={onClose} className="flex-1 h-10 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+          {importMode === 'excel' && preview && preview.parsed.length > 0 && (
+            <button onClick={handleConfirmImport} disabled={saving} className="flex-1 h-10 bg-[#E63946] text-white rounded-xl text-sm font-semibold disabled:opacity-50">
+              {saving ? 'Importing…' : `Import ${preview.parsed.length} Question${preview.parsed.length !== 1 ? 's' : ''}`}
+            </button>
+          )}
           {importMode === 'json' && (
-            <button onClick={handleImport} disabled={saving || !json.trim()} className="flex-1 h-10 bg-[#E63946] text-white rounded-xl text-sm font-semibold disabled:opacity-50">
+            <button onClick={handleJsonImport} disabled={saving || !json.trim()} className="flex-1 h-10 bg-[#E63946] text-white rounded-xl text-sm font-semibold disabled:opacity-50">
               {saving ? 'Importing…' : 'Import'}
             </button>
           )}
@@ -487,11 +523,201 @@ function BulkImportModal({ token, modules, onClose, onImported }: { token: strin
   );
 }
 
+// ── Test modal (create/edit) ─────────────────────────────────────────────────
+function TestModal({ token, modules, initial, onClose, onSaved }: { token: string; modules: Module[]; initial: Partial<Test> | null; onClose: () => void; onSaved: () => void }) {
+  const isEdit = !!initial?.id;
+  const [form, setForm] = useState({
+    title: initial?.title ?? '',
+    description: initial?.description ?? '',
+    module_id: initial?.module_id ?? (modules[0]?.id ?? 0),
+    topic_tag: initial?.topic_tag ?? '',
+    time_limit_minutes: initial?.time_limit_minutes ?? 30,
+    pass_mark: initial?.pass_mark ?? 70,
+    is_active: initial?.is_active !== false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim()) { setError('Title is required'); return; }
+    setSaving(true); setError('');
+    try {
+      const payload = {
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        module_id: form.module_id || null,
+        topic_tag: form.topic_tag.trim() || null,
+        time_limit_minutes: form.time_limit_minutes,
+        pass_mark: form.pass_mark,
+        is_active: form.is_active,
+      };
+      if (isEdit) await api.updateTest(token, initial!.id!, payload);
+      else await api.createTest(token, payload);
+      onSaved();
+    } catch (e: any) { setError(e.message); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b flex items-center justify-between">
+          <h2 className="text-base font-bold text-gray-800">{isEdit ? 'Edit Test' : 'New Test'}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        </div>
+        <form onSubmit={handleSave} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Title</label>
+            <input type="text" value={form.title} onChange={e => set('title', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-[#E63946] outline-none" placeholder="e.g. Mock Test January 2026" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description</label>
+            <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-[#E63946] outline-none resize-y" placeholder="Optional description" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Module</label>
+            <select value={form.module_id} onChange={e => set('module_id', parseInt(e.target.value))} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-[#E63946] outline-none">
+              <option value={0}>— No specific module —</option>
+              {modules.map(m => <option key={m.id} value={m.id}>{m.icon} {m.title_en}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Topic Tag (optional)</label>
+            <input type="text" value={form.topic_tag} onChange={e => set('topic_tag', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-[#E63946] outline-none" placeholder="e.g. road-signs" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Time Limit (min)</label>
+              <input type="number" value={form.time_limit_minutes} onChange={e => set('time_limit_minutes', parseInt(e.target.value) || 30)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-[#E63946] outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Pass Mark (%)</label>
+              <input type="number" value={form.pass_mark} onChange={e => set('pass_mark', parseInt(e.target.value) || 70)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:border-[#E63946] outline-none" />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-[#E63946]" />
+            <span className="text-sm text-gray-700 font-medium">Active (visible to learners)</span>
+          </label>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 h-10 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+            <button type="submit" disabled={saving} className="flex-1 h-10 bg-[#1D3557] text-white rounded-xl text-sm font-semibold disabled:opacity-50">
+              {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Test'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Test detail modal (view questions in a test) ─────────────────────────────
+function TestDetailModal({ token, testId, modules, onClose, onChanged }: { token: string; testId: number; modules: Module[]; onClose: () => void; onChanged: () => void }) {
+  const [test, setTest] = useState<TestDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showBulk, setShowBulk] = useState(false);
+
+  const fetch = useCallback(async () => {
+    setLoading(true);
+    try { setTest(await api.getTest(token, testId)); }
+    catch (e: any) { console.error(e); }
+    finally { setLoading(false); }
+  }, [token, testId]);
+
+  useEffect(() => { fetch(); }, [fetch]);
+
+  const removeQuestion = async (questionId: number) => {
+    if (!confirm('Remove this question from the test?')) return;
+    try { await api.removeTestQuestion(token, testId, questionId); fetch(); onChanged(); }
+    catch (e: any) { alert(e.message); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
+          <div>
+            <h2 className="text-base font-bold text-gray-800">{test?.title || 'Loading…'}</h2>
+            {test && <p className="text-xs text-gray-400 mt-0.5">{test.actual_question_count ?? test.question_count} questions · {test.time_limit_minutes}min · Pass: {test.pass_mark}%</p>}
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        </div>
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
+          {loading ? <div className="text-center text-gray-400 text-sm py-8">Loading…</div> :
+            test && (
+              <>
+                {test.questions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-400 text-sm mb-4">No questions in this test yet.</p>
+                    <button onClick={() => setShowBulk(true)} className="h-9 px-4 bg-[#E63946] text-white text-sm rounded-xl font-semibold hover:bg-[#c1121f]">
+                      ⬆ Upload Questions
+                    </button>
+                  </div>
+                ) : (
+                  <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-left px-4 py-2 font-semibold text-gray-400 uppercase">#</th>
+                          <th className="text-left px-4 py-2 font-semibold text-gray-400 uppercase">Question</th>
+                          <th className="text-left px-4 py-2 font-semibold text-gray-400 uppercase">Topic</th>
+                          <th className="text-left px-4 py-2 font-semibold text-gray-400 uppercase">Diff</th>
+                          <th className="px-4 py-2" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {test.questions.map((q, i) => (
+                          <tr key={q.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                            <td className="px-4 py-3 text-gray-400">{i + 1}</td>
+                            <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{q.question_en}</td>
+                            <td className="px-4 py-3 text-gray-500">{q.topic_tag}</td>
+                            <td className="px-4 py-3"><DiffBadge d={q.difficulty} /></td>
+                            <td className="px-4 py-3">
+                              <button onClick={() => removeQuestion(q.id)} className="text-xs text-red-400 font-semibold hover:underline">Remove</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )
+          }
+        </div>
+        <div className="px-6 py-4 border-t flex gap-3 shrink-0">
+          <button onClick={onClose} className="flex-1 h-10 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Close</button>
+          {!loading && test && (
+            <button onClick={() => setShowBulk(true)} className="flex-1 h-10 bg-[#E63946] text-white rounded-xl text-sm font-semibold hover:bg-[#c1121f]">
+              ⬆ Upload More Questions
+            </button>
+          )}
+        </div>
+      </div>
+      {showBulk && (
+        <BulkImportModal
+          token={token}
+          modules={modules}
+          tests={[{ id: testId, title: test?.title || '', description: null, module_id: null, topic_tag: null, question_count: 0, time_limit_minutes: 30, pass_mark: 70, is_active: true, created_at: '', updated_at: '' }]}
+          preselectedTestId={testId}
+          onClose={() => setShowBulk(false)}
+          onImported={() => { setShowBulk(false); fetch(); onChanged(); }}
+        />
+      )}
+    </div>
+  );
+}
+
 // ── Main ContentTab ───────────────────────────────────────────────────────────
 export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: string) => void; err: (m: string) => void } }) {
-  const [view, setView] = useState<'modules' | 'questions'>('modules');
+  const [view, setView] = useState<'modules' | 'questions' | 'tests'>('modules');
   const [modules, setModules] = useState<Module[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [tests, setTests] = useState<Test[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -503,10 +729,19 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
   const [moduleModal, setModuleModal] = useState<{ open: boolean; initial: Partial<Module> | null }>({ open: false, initial: null });
   const [questionModal, setQuestionModal] = useState<{ open: boolean; initial: Partial<Question> | null }>({ open: false, initial: null });
   const [bulkModal, setBulkModal] = useState(false);
+  const [testModal, setTestModal] = useState<{ open: boolean; initial: Partial<Test> | null }>({ open: false, initial: null });
+  const [testDetailModal, setTestDetailModal] = useState<{ open: boolean; testId: number }>({ open: false, testId: 0 });
 
   const fetchModules = useCallback(async () => {
     setLoading(true);
     try { setModules(await api.getModules(token)); }
+    catch (e: any) { toast.err(e.message); }
+    finally { setLoading(false); }
+  }, [token]);
+
+  const fetchTests = useCallback(async () => {
+    setLoading(true);
+    try { setTests(await api.getTests(token)); }
     catch (e: any) { toast.err(e.message); }
     finally { setLoading(false); }
   }, [token]);
@@ -526,6 +761,7 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
 
   useEffect(() => { fetchModules(); }, [fetchModules]);
   useEffect(() => { if (view === 'questions') fetchQuestions(); }, [view, fetchQuestions]);
+  useEffect(() => { if (view === 'tests') fetchTests(); }, [view, fetchTests]);
 
   const deleteQuestion = async (id: number) => {
     if (!confirm('Delete this question?')) return;
@@ -536,6 +772,12 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
   const deleteModule = async (id: number) => {
     if (!confirm('Delete this module and ALL its questions/lessons?')) return;
     try { await api.deleteModule(token, id); toast.ok('Module deleted'); fetchModules(); }
+    catch (e: any) { toast.err(e.message); }
+  };
+
+  const deleteTest = async (id: number) => {
+    if (!confirm('Delete this test? Questions will remain in the pool.')) return;
+    try { await api.deleteTest(token, id); toast.ok('Test deleted'); fetchTests(); }
     catch (e: any) { toast.err(e.message); }
   };
 
@@ -556,8 +798,16 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
           onSaved={() => { setQuestionModal({ open: false, initial: null }); toast.ok('Question saved'); fetchQuestions(); }} />
       )}
       {bulkModal && (
-        <BulkImportModal token={token} modules={modules} onClose={() => setBulkModal(false)}
-          onImported={() => { setBulkModal(false); toast.ok('Questions imported'); fetchQuestions(); }} />
+        <BulkImportModal token={token} modules={modules} tests={tests} onClose={() => setBulkModal(false)}
+          onImported={() => { setBulkModal(false); toast.ok('Questions imported'); fetchQuestions(); if (view === 'tests') fetchTests(); }} />
+      )}
+      {testModal.open && (
+        <TestModal token={token} modules={modules} initial={testModal.initial} onClose={() => setTestModal({ open: false, initial: null })}
+          onSaved={() => { setTestModal({ open: false, initial: null }); toast.ok('Test saved'); fetchTests(); }} />
+      )}
+      {testDetailModal.open && (
+        <TestDetailModal token={token} testId={testDetailModal.testId} modules={modules} onClose={() => setTestDetailModal({ open: false, testId: 0 })}
+          onChanged={() => fetchTests()} />
       )}
 
       {/* Header */}
@@ -583,16 +833,21 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
               </button>
             </>
           )}
+          {view === 'tests' && (
+            <button onClick={() => setTestModal({ open: true, initial: null })} className="h-9 px-4 bg-[#1D3557] text-white text-sm rounded-xl font-semibold hover:bg-[#0A1628]">
+              + New Test
+            </button>
+          )}
         </div>
       </motion.div>
 
       {/* Sub-nav */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-        {(['modules', 'questions'] as const).map(v => (
+        {(['modules', 'questions', 'tests'] as const).map(v => (
           <button key={v} onClick={() => { setView(v); setPage(1); }}
             className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors capitalize
               ${view === v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-            {v === 'modules' ? `📚 Modules (${modules.length})` : '❓ Questions'}
+            {v === 'modules' ? `📚 Modules (${modules.length})` : v === 'questions' ? '❓ Questions' : `📝 Tests (${tests.length})`}
           </button>
         ))}
       </div>
@@ -726,6 +981,65 @@ export function ContentTab({ token, toast }: { token: string; toast: { ok: (m: s
               </div>
             )}
           </div>
+        </motion.div>
+      )}
+
+      {/* ── Tests view ── */}
+      {view === 'tests' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-4"
+        >
+          {loading ? <div className="p-12 text-center text-gray-400 text-sm">Loading…</div> :
+            tests.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-gray-400 text-sm mb-4">No tests yet. Create one to group questions into a named test.</p>
+                <button onClick={() => setTestModal({ open: true, initial: null })} className="h-9 px-4 bg-[#1D3557] text-white text-sm rounded-xl font-semibold hover:bg-[#0A1628]">
+                  + Create First Test
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {tests.map(t => (
+                  <motion.div
+                    key={t.id}
+                    whileHover={{ y: -4 }}
+                    className="bg-white rounded-2xl border border-[#E63946]/10 glass-card shadow-sm p-5 space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm">{t.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{t.module_title || 'All modules'} · {t.topic_tag || 'All topics'}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => setTestModal({ open: true, initial: t })} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 text-xs">✏️</button>
+                        <button onClick={() => deleteTest(t.id)} className="p-1.5 hover:bg-red-50 rounded-lg text-gray-300 hover:text-red-500 text-xs">🗑</button>
+                      </div>
+                    </div>
+                    {t.description && <p className="text-xs text-gray-500 line-clamp-2">{t.description}</p>}
+                    <div className="flex gap-3 text-xs text-gray-500">
+                      <span>❓ {t.actual_question_count ?? t.question_count} questions</span>
+                      <span>⏱ {t.time_limit_minutes}min</span>
+                      <span>✅ {t.pass_mark}% pass</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {t.is_active
+                        ? <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Active</span>
+                        : <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">Inactive</span>}
+                    </div>
+                    <button
+                      onClick={() => setTestDetailModal({ open: true, testId: t.id })}
+                      className="w-full text-xs text-[#E63946] font-semibold hover:underline text-left"
+                    >
+                      View questions →
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            )
+          }
         </motion.div>
       )}
     </motion.div>
